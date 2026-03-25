@@ -1,9 +1,10 @@
 name: Create Stabilization Issues
 
 on:
-  push:
+  pull_request:
+    types: [synchronize, reopened]
     branches:
-      - copilot/final-regression-pass-checkout-states
+      - master
     paths:
       - '.github/workflows/create-stabilization-issues.yml'
 

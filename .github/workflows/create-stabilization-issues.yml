@@ -1,7 +1,11 @@
 name: Create Stabilization Issues
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - copilot/final-regression-pass-checkout-states
+    paths:
+      - '.github/workflows/create-stabilization-issues.yml'
 
 permissions:
   issues: write

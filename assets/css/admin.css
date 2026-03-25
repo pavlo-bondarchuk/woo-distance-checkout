@@ -1,0 +1,33 @@
+/* Woo Distance Checkout Admin Styles */
+
+.wdc-settings-wrap {
+    max-width: 100%;
+}
+
+.wdc-settings-wrap .form-table {
+    margin-top: 20px;
+}
+
+.wdc-settings-wrap .form-table th {
+    vertical-align: top;
+    padding-top: 10px;
+}
+
+.wdc-settings-wrap .form-table input[type="text"],
+.wdc-settings-wrap .form-table input[type="password"],
+.wdc-settings-wrap .form-table input[type="number"],
+.wdc-settings-wrap .form-table textarea {
+    width: 100%;
+    max-width: 400px;
+}
+
+.wdc-settings-wrap .form-table textarea {
+    max-width: 500px;
+}
+
+.wdc-settings-wrap .description {
+    display: block;
+    margin-top: 5px;
+    font-style: italic;
+    color: #666;
+}

@@ -1,0 +1,39 @@
+# OS
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# PHP
+.php_cs.cache
+composer.lock
+
+# WordPress
+wp-config.php
+wp-content/uploads/
+wp-content/cache/
+
+# Project specific
+.env
+.env.local
+debug.log
+
+# Claude / AI agent files
+.claude/
+CLAUDE.md
+*.md
+skills-lock.json
+TRANSLATION_FIX_SUMMARY.txt
+
+# Playwright MCP logs
+.playwright-mcp/
+
+# Planning & progress records (local only)
+PLAN.md
+PROGRESS.md

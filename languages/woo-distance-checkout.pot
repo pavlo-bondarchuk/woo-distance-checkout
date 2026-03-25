@@ -1,0 +1,414 @@
+# Copyright (C) 2026 Pavlo Bondarchuk
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Woo Distance Checkout 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/woo-distance-checkout\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-03-25T13:32:47+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: woo-distance-checkout\n"
+
+#. Plugin Name of the plugin
+#: woo-distance-checkout.php
+msgid "Woo Distance Checkout"
+msgstr ""
+
+#. Description of the plugin
+#: woo-distance-checkout.php
+msgid "Distance-based checkout for WooCommerce with delivery and pickup options."
+msgstr ""
+
+#. Author of the plugin
+#: woo-distance-checkout.php
+msgid "Pavlo Bondarchuk"
+msgstr ""
+
+#. Author URI of the plugin
+#: woo-distance-checkout.php
+msgid "https://bonddesign.top"
+msgstr ""
+
+#: admin/class-admin-order-display.php:29
+#: admin/class-admin-order-display.php:40
+msgid "WDC Calculation Details"
+msgstr ""
+
+#: admin/class-admin-order-display.php:64
+msgid "Unable to load order data."
+msgstr ""
+
+#: admin/class-admin-order-display.php:81
+msgid "No WDC calculation data stored for this order."
+msgstr ""
+
+#: admin/class-admin-order-display.php:180
+msgid "Fulfillment Method"
+msgstr ""
+
+#: admin/class-admin-order-display.php:186
+msgid "Store ID"
+msgstr ""
+
+#: admin/class-admin-order-display.php:191
+msgid "Store Name"
+msgstr ""
+
+#: admin/class-admin-order-display.php:198
+#: admin/views/settings-page.php:58
+msgid "Store Address"
+msgstr ""
+
+#: admin/class-admin-order-display.php:203
+msgid "Customer Address"
+msgstr ""
+
+#: admin/class-admin-order-display.php:209
+msgid "Distance"
+msgstr ""
+
+#: admin/class-admin-order-display.php:214
+msgid "Shipping Amount"
+msgstr ""
+
+#: admin/class-admin-order-display.php:220
+msgid "Tax Rate"
+msgstr ""
+
+#: admin/class-admin-order-display.php:225
+msgid "Sales Tax Amount"
+msgstr ""
+
+#: admin/class-admin-order-display.php:230
+msgid "Shipping Tax Amount"
+msgstr ""
+
+#: admin/class-admin-order-display.php:235
+msgid "Tax Source"
+msgstr ""
+
+#: admin/class-admin-order-display.php:241
+msgid "Shipping Required"
+msgstr ""
+
+#: admin/class-admin-order-display.php:242
+#: admin/class-admin-order-display.php:250
+msgid "No"
+msgstr ""
+
+#: admin/class-admin-order-display.php:248
+msgid "Calculation Success"
+msgstr ""
+
+#: admin/class-admin-order-display.php:250
+msgid "Yes"
+msgstr ""
+
+#: admin/class-admin-order-display.php:256
+msgid "Calculation Message"
+msgstr ""
+
+#: admin/class-admin-order-display.php:264
+msgid "Tax Fallback Used"
+msgstr ""
+
+#: admin/class-admin-order-display.php:265
+msgid "Tax could not be automatically calculated. Manual review may be needed."
+msgstr ""
+
+#: admin/class-admin-order-display.php:271
+#: admin/views/settings-page.php:265
+msgid "Calculation Mode"
+msgstr ""
+
+#: admin/class-admin-order-display.php:277
+#: admin/views/settings-page.php:289
+msgid "Mock Scenario"
+msgstr ""
+
+#: admin/class-admin-order-display.php:356
+msgid "miles"
+msgstr ""
+
+#: admin/class-admin.php:19
+#: admin/class-admin.php:20
+msgid "Distance Checkout"
+msgstr ""
+
+#: admin/class-admin.php:30
+msgid "You do not have permission to access this page."
+msgstr ""
+
+#: admin/class-admin.php:49
+msgid "Settings saved successfully."
+msgstr ""
+
+#: admin/class-admin.php:90
+msgid "Settings"
+msgstr ""
+
+#: admin/views/settings-page.php:9
+msgid "Woo Distance Checkout Settings"
+msgstr ""
+
+#: admin/views/settings-page.php:20
+msgid "Google Maps API Key"
+msgstr ""
+
+#: admin/views/settings-page.php:31
+msgid "Your Google Maps Distance Matrix API key."
+msgstr ""
+
+#: admin/views/settings-page.php:39
+msgid "RapidAPI Tax API Key"
+msgstr ""
+
+#: admin/views/settings-page.php:50
+msgid "Your RapidAPI key for Sales Tax Rates API. Get it from RapidAPI."
+msgstr ""
+
+#: admin/views/settings-page.php:68
+msgid "Full address of your main store location."
+msgstr ""
+
+#: admin/views/settings-page.php:76
+msgid "Rate per Mile"
+msgstr ""
+
+#: admin/views/settings-page.php:89
+msgid "Shipping cost per mile."
+msgstr ""
+
+#: admin/views/settings-page.php:97
+msgid "Base Shipping Fee"
+msgstr ""
+
+#: admin/views/settings-page.php:110
+msgid "Base fee applied to all deliveries."
+msgstr ""
+
+#: admin/views/settings-page.php:118
+msgid "Minimum Shipping Cost"
+msgstr ""
+
+#: admin/views/settings-page.php:131
+msgid "Minimum shipping cost threshold."
+msgstr ""
+
+#: admin/views/settings-page.php:139
+msgid "Rounding Step"
+msgstr ""
+
+#: admin/views/settings-page.php:152
+msgid "Round up to the nearest whole dollar amount. For example, 5 rounds up to the nearest $5."
+msgstr ""
+
+#: admin/views/settings-page.php:160
+msgid "Maximum Delivery Distance (miles)"
+msgstr ""
+
+#: admin/views/settings-page.php:172
+msgid "Maximum distance for delivery option availability."
+msgstr ""
+
+#: admin/views/settings-page.php:180
+msgid "Taxable Shipping"
+msgstr ""
+
+#: admin/views/settings-page.php:191
+msgid "Enable tax calculation on shipping costs."
+msgstr ""
+
+#: admin/views/settings-page.php:199
+msgid "Debug Mode"
+msgstr ""
+
+#: admin/views/settings-page.php:210
+msgid "Enable debug logging."
+msgstr ""
+
+#: admin/views/settings-page.php:218
+msgid "API Timeout (seconds)"
+msgstr ""
+
+#: admin/views/settings-page.php:230
+msgid "Timeout in seconds for external API requests."
+msgstr ""
+
+#: admin/views/settings-page.php:238
+msgid "Fallback Mode"
+msgstr ""
+
+#: admin/views/settings-page.php:247
+msgid "Block Checkout"
+msgstr ""
+
+#: admin/views/settings-page.php:250
+msgid "Hide Delivery Option"
+msgstr ""
+
+#: admin/views/settings-page.php:253
+msgid "Manual Review"
+msgstr ""
+
+#: admin/views/settings-page.php:257
+msgid "Behavior when distance/tax service is unavailable."
+msgstr ""
+
+#: admin/views/settings-page.php:274
+msgid "Live API"
+msgstr ""
+
+#: admin/views/settings-page.php:277
+msgid "Mock Data"
+msgstr ""
+
+#: admin/views/settings-page.php:281
+msgid "Choose between live API calculations or mock data for testing."
+msgstr ""
+
+#: admin/views/settings-page.php:298
+msgid "Happy Path (delivery succeeds)"
+msgstr ""
+
+#: admin/views/settings-page.php:301
+msgid "Incomplete Address"
+msgstr ""
+
+#: admin/views/settings-page.php:304
+msgid "Out of Delivery Zone"
+msgstr ""
+
+#: admin/views/settings-page.php:307
+msgid "API Failure"
+msgstr ""
+
+#: admin/views/settings-page.php:311
+msgid "Active only when Calculation Mode is set to Mock Data."
+msgstr ""
+
+#: admin/views/settings-page.php:314
+msgid "Mock Mode Quick Guide"
+msgstr ""
+
+#: admin/views/settings-page.php:316
+msgid "Mock mode uses real plugin inputs for business logic (Rate per Mile, Base Fee, Minimum Shipping, Rounding, Max Distance, Store Address, fulfillment method, checkout/session data). Only provider responses are simulated."
+msgstr ""
+
+#: admin/views/settings-page.php:318
+msgid "Scenario behavior:"
+msgstr ""
+
+#: admin/views/settings-page.php:320
+msgid "Happy Path — distance and tax provider responses succeed"
+msgstr ""
+
+#: admin/views/settings-page.php:321
+msgid "Incomplete Address — address validation fails in provider path"
+msgstr ""
+
+#: admin/views/settings-page.php:322
+msgid "Out of Delivery Zone — distance provider returns 100 miles (beyond max)"
+msgstr ""
+
+#: admin/views/settings-page.php:323
+msgid "API Failure — provider response is simulated as failure"
+msgstr ""
+
+#: admin/views/settings-page.php:325
+msgid "Example built-in mock defaults: happy_path distance = 12 mi, out_of_delivery_zone distance = 100 mi, delivery tax=8.25%, pickup tax=7.75%"
+msgstr ""
+
+#: includes/class-cart-totals.php:42
+msgid "Shipping"
+msgstr ""
+
+#: includes/class-cart-totals.php:65
+#: includes/class-order-meta.php:102
+msgid "Sales Tax"
+msgstr ""
+
+#: includes/class-cart-totals.php:72
+#: includes/class-order-meta.php:105
+msgid "Shipping Tax"
+msgstr ""
+
+#: includes/class-checkout-controller.php:129
+msgid "Delivery is not available for your address. Please choose pickup or update your address."
+msgstr ""
+
+#: includes/class-checkout-controller.php:160
+msgid "Checkout is temporarily unavailable because taxes could not be calculated."
+msgstr ""
+
+#: includes/class-checkout-controller.php:161
+msgid "We are unable to calculate taxes for pickup at this time. Please try again later."
+msgstr ""
+
+#: includes/class-checkout-controller.php:162
+msgid "We are unable to calculate taxes for delivery at this time. Please try again later or choose Self Pickup."
+msgstr ""
+
+#: includes/class-checkout-controller.php:163
+msgid "Total unavailable until taxes are calculated."
+msgstr ""
+
+#. translators: %d: maximum delivery distance in miles
+#: includes/class-checkout-controller.php:196
+#: includes/class-checkout-controller.php:311
+#, php-format
+msgid "Delivery is not available to your address. Maximum delivery distance is %d miles."
+msgstr ""
+
+#: includes/class-checkout-controller.php:225
+msgid "Tax calculation failed."
+msgstr ""
+
+#: includes/class-checkout-controller.php:229
+msgid "We are unable to calculate taxes for your order at this time. Please try again or contact support."
+msgstr ""
+
+#: includes/class-checkout-controller.php:297
+msgid "Delivery address failed validation. Please check your address."
+msgstr ""
+
+#: includes/class-checkout-controller.php:321
+msgid "Unable to calculate delivery distance. Please check your address or contact us."
+msgstr ""
+
+#: includes/class-checkout-controller.php:483
+msgid "Tax Calculation Notice"
+msgstr ""
+
+#: includes/class-checkout-controller.php:486
+msgid "We could not calculate taxes automatically. Your order was submitted and may require manual review."
+msgstr ""
+
+#: includes/class-plugin.php:44
+msgid "Woo Distance Checkout requires WooCommerce to be installed and activated."
+msgstr ""
+
+#: templates/checkout-delivery-method.php:10
+msgid "Delivery Method"
+msgstr ""
+
+#: templates/checkout-delivery-method.php:20
+msgid "Delivery"
+msgstr ""
+
+#: templates/checkout-delivery-method.php:30
+msgid "Self Pickup"
+msgstr ""
+
+#: templates/checkout-store-selector.php:18
+msgid "Select Pickup Store"
+msgstr ""
+
+#: templates/checkout-store-selector.php:21
+msgid "No pickup store configured."
+msgstr ""

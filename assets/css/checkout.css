@@ -1,0 +1,105 @@
+/* Woo Distance Checkout Styles */
+
+.wdc-checkout-section {
+    margin-bottom: 2em;
+    padding: 1em;
+    border: 1px solid #ddd;
+    background-color: #f9f9f9;
+    border-radius: 3px;
+}
+
+.wdc-checkout-section h3 {
+    margin-top: 0;
+    margin-bottom: 1em;
+}
+
+.wdc-checkout-notices {
+    margin-bottom: 1em;
+}
+
+.wdc-checkout-notices .notice {
+    margin-bottom: 1em;
+}
+
+.wdc-store-selector--hidden {
+    display: none !important;
+}
+
+.wdc-store-selector--visible {
+    display: block !important;
+}
+
+.wdc-store-selector-message {
+    font-size: 0.95em;
+    color: #a00;
+    margin: 0;
+}
+
+/* Checkout Blocked State Styles */
+
+.wdc-notice {
+    padding: 1em;
+    border-radius: 3px;
+    margin-bottom: 1em;
+}
+
+.wdc-notice-error {
+    background-color: #fde7e7;
+    border-left: 4px solid #c00;
+    color: #c00;
+}
+
+.wdc-notice-error p {
+    margin: 0;
+    font-weight: 500;
+}
+
+/* Disabled button styling */
+button.wdc-blocked {
+    opacity: 0.6;
+    cursor: not-allowed !important;
+    background-color: #ccc !important;
+    border-color: #999 !important;
+    color: #666 !important;
+}
+
+button.wdc-blocked:hover,
+button.wdc-blocked:focus {
+    opacity: 0.6;
+    background-color: #ccc !important;
+}
+
+/* Helper text below disabled button */
+.wdc-blocked-helper-text {
+    display: none;
+    color: #c00;
+    font-size: 0.85em;
+    margin-top: 0.5em;
+    padding: 0.5em;
+    background-color: #fdf5f5;
+    border-left: 3px solid #c00;
+    border-radius: 2px;
+}
+
+/* Total placeholder */
+.wdc-total-placeholder {
+    display: none;
+    padding: 1em;
+    background-color: #f0f0f0;
+    border: 1px dashed #999;
+    border-radius: 3px;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    margin: 0.5em 0;
+}
+
+.wdc-total-placeholder p {
+    margin: 0;
+}
+
+/* Hide elements */
+.wdc-hidden {
+    display: none !important;
+}
+}

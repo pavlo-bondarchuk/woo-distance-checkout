@@ -1,12 +1,7 @@
 name: Create Stabilization Issues
 
 on:
-  pull_request:
-    types: [synchronize, reopened]
-    branches:
-      - master
-    paths:
-      - '.github/workflows/create-stabilization-issues.yml'
+  workflow_dispatch:
 
 permissions:
   issues: write

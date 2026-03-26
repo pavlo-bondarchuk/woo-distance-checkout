@@ -3,9 +3,31 @@
 (function () {
   "use strict";
 
+  function isDebugModeEnabled() {
+    return (
+      typeof wdcCheckout !== "undefined" &&
+      wdcCheckout &&
+      wdcCheckout.debugMode === "yes"
+    );
+  }
+
+  function debugLog(message, payload) {
+    if (!isDebugModeEnabled()) {
+      return;
+    }
+
+    if (typeof payload === "undefined") {
+      console.debug("WDC Debug:", message);
+      return;
+    }
+
+    console.debug("WDC Debug:", message, payload);
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     initializeFulfillmentMethod();
     initializeStoreSelector();
+    initializeAddressAutocomplete();
     updateCheckoutBlockedState();
     updateOutOfZoneNotice();
 
@@ -66,6 +88,18 @@
             if (typeof response.data.outOfZoneState !== "undefined") {
               wdcCheckout.outOfZoneState = response.data.outOfZoneState;
             }
+
+            if (typeof response.data.pickupStoreAddress !== "undefined") {
+              wdcCheckout.pickupStoreAddress = response.data.pickupStoreAddress;
+            }
+
+            if (method === "pickup") {
+              applyPickupStoreAddressToBilling();
+              debugLog("checkout refresh triggered after pickup autofill");
+              triggerCheckoutRefresh();
+              return;
+            }
+
             triggerCheckoutRefresh();
           } else {
             console.error(
@@ -96,10 +130,20 @@
   }
 
   function triggerCheckoutRefresh() {
+    debugLog("checkout refresh trigger requested", {
+      hasJQuery: typeof jQuery !== "undefined",
+    });
+
     if (typeof jQuery !== "undefined") {
       jQuery(document.body).trigger("update_checkout");
+      debugLog("checkout refresh triggered", {
+        method: "jQuery update_checkout",
+      });
     } else {
       console.warn("WDC: jQuery not available for checkout refresh");
+      debugLog("checkout refresh NOT triggered", {
+        reason: "jQuery not available",
+      });
     }
   }
 
@@ -112,6 +156,444 @@
 
     storeSelect.addEventListener("change", function () {
       handleStoreSelectionChange(this.value);
+    });
+  }
+
+  function parsePickupStoreAddress(address) {
+    var parsed = {
+      street: "",
+      city: "",
+      state: "",
+      postcode: "",
+      country: "US",
+    };
+
+    if (!address) {
+      return parsed;
+    }
+
+    var parts = address
+      .split(",")
+      .map(function (part) {
+        return part.trim();
+      })
+      .filter(function (part) {
+        return !!part;
+      });
+
+    if (!parts.length) {
+      return parsed;
+    }
+
+    parsed.street = parts[0] || "";
+    parsed.city = parts.length > 1 ? parts[1] : "";
+
+    var stateZipPart = parts.length > 2 ? parts[2] : "";
+    var stateZipMatch = stateZipPart.match(
+      /^([A-Za-z]{2})\s+(\d{5}(?:-\d{4})?)$/,
+    );
+    if (stateZipMatch) {
+      parsed.state = stateZipMatch[1].toUpperCase();
+      parsed.postcode = stateZipMatch[2];
+    }
+
+    if (parts.length > 3) {
+      parsed.country = normalizeCountryCode(parts[3]);
+    }
+
+    return parsed;
+  }
+
+  function normalizeCountryCode(countryPart) {
+    if (!countryPart) {
+      return "US";
+    }
+
+    var upper = countryPart.toUpperCase();
+    if (
+      upper === "USA" ||
+      upper === "UNITED STATES" ||
+      upper === "UNITED STATES OF AMERICA"
+    ) {
+      return "US";
+    }
+
+    return upper.length === 2 ? upper : "US";
+  }
+
+  function applyPickupStoreAddressToBilling() {
+    var address =
+      wdcCheckout && wdcCheckout.pickupStoreAddress
+        ? wdcCheckout.pickupStoreAddress
+        : "";
+
+    debugLog("pickup autofill started", {
+      storeAddress: address,
+    });
+
+    var parsed = parsePickupStoreAddress(address);
+    debugLog("parsed pickup store address", parsed);
+
+    setCheckoutFieldValue("billing_address_1", parsed.street);
+    setCheckoutFieldValue("billing_city", parsed.city);
+    setCheckoutFieldValue("billing_state", parsed.state);
+    setCheckoutFieldValue("billing_postcode", parsed.postcode);
+    setCheckoutFieldValue("billing_country", parsed.country);
+
+    debugLog("pickup billing fields applied", {
+      billing_address_1: getFieldValue("billing_address_1"),
+      billing_city: getFieldValue("billing_city"),
+      billing_state: getFieldValue("billing_state"),
+      billing_postcode: getFieldValue("billing_postcode"),
+      billing_country: getFieldValue("billing_country"),
+    });
+  }
+
+  function initializeAddressAutocomplete() {
+    debugLog("autocomplete initialization started", {
+      hasCheckoutConfig: !!wdcCheckout,
+      hasApiKey: !!(wdcCheckout && wdcCheckout.googleMapsApiKey),
+      hasGoogle: typeof google !== "undefined",
+      hasMaps: typeof google !== "undefined" && !!google.maps,
+      hasPlaces:
+        typeof google !== "undefined" && !!google.maps && !!google.maps.places,
+    });
+
+    if (
+      !wdcCheckout ||
+      !wdcCheckout.googleMapsApiKey ||
+      typeof google === "undefined" ||
+      !google.maps ||
+      !google.maps.places
+    ) {
+      debugLog("autocomplete initialization skipped", {
+        reason: "missing config or google maps places",
+      });
+      return;
+    }
+
+    var addressInput = document.getElementById("billing_address_1");
+    debugLog("selector check", {
+      selector: "#billing_address_1",
+      exists: !!addressInput,
+      value: addressInput ? addressInput.value : null,
+    });
+
+    if (!addressInput) {
+      return;
+    }
+
+    addressInput.addEventListener("keydown", function (event) {
+      if (event.key !== "Enter") {
+        return;
+      }
+
+      var pacItemSelected = !!document.querySelector(".pac-item-selected");
+      var pacContainerVisible = !!document.querySelector(
+        ".pac-container:not([style*='display: none']) .pac-item",
+      );
+
+      debugLog("Enter key intercepted in billing_address_1", {
+        suggestionSelectionDetected: pacItemSelected,
+        suggestionListVisible: pacContainerVisible,
+      });
+
+      if (pacContainerVisible) {
+        event.preventDefault();
+        debugLog("suggestion selection detected / not detected", {
+          detected: pacItemSelected,
+          action: "prevented native enter submit while suggestions visible",
+        });
+      } else {
+        debugLog("suggestion selection detected / not detected", {
+          detected: false,
+          action: "no forced checkout refresh on plain enter",
+        });
+      }
+    });
+
+    var autocomplete = new google.maps.places.Autocomplete(addressInput, {
+      fields: ["address_components"],
+      types: ["address"],
+    });
+
+    debugLog("autocomplete initialized successfully", {
+      fieldId: "billing_address_1",
+      fields: ["address_components"],
+      types: ["address"],
+    });
+
+    autocomplete.addListener("place_changed", function () {
+      debugLog("place_changed fired");
+
+      var place = autocomplete.getPlace();
+      debugLog("raw place summary", {
+        hasPlace: !!place,
+        placeId: place && place.place_id ? place.place_id : null,
+        name: place && place.name ? place.name : null,
+        formattedAddress:
+          place && place.formatted_address ? place.formatted_address : null,
+        hasAddressComponents: !!(place && place.address_components),
+      });
+
+      if (!place || !place.address_components) {
+        debugLog("place_changed aborted", {
+          reason: "missing place or address_components",
+        });
+        return;
+      }
+
+      debugLog("raw address_components", place.address_components);
+
+      var parsedAddress = parseGoogleAddressComponents(
+        place.address_components,
+      );
+      var normalizedPayload = buildNormalizedAddressPayload(parsedAddress);
+
+      debugLog("parsed mapped values", {
+        street: normalizedPayload.street,
+        city: normalizedPayload.city,
+        state: normalizedPayload.state,
+        zip: normalizedPayload.postcode,
+        country: normalizedPayload.country,
+      });
+
+      debugLog("parsed payload before apply", normalizedPayload);
+      applyParsedAddressToCheckoutFields(normalizedPayload);
+
+      debugLog("final DOM snapshot after autofill", {
+        billing_address_1: getFieldValue("billing_address_1"),
+        billing_city: getFieldValue("billing_city"),
+        billing_state: getFieldValue("billing_state"),
+        billing_postcode: getFieldValue("billing_postcode"),
+        billing_country: getFieldValue("billing_country"),
+      });
+
+      if (!isAutofillPayloadComplete()) {
+        debugLog("skipped checkout refresh because payload incomplete", {
+          billing_city: getFieldValue("billing_city"),
+          billing_state: getFieldValue("billing_state"),
+          billing_postcode: getFieldValue("billing_postcode"),
+        });
+        return;
+      }
+
+      debugLog("checkout refresh fired after complete autofill");
+      triggerCheckoutRefresh();
+    });
+  }
+
+  function parseGoogleAddressComponents(components) {
+    var parsed = {
+      streetNumber: "",
+      route: "",
+      city: "",
+      state: "",
+      postcode: "",
+      country: "",
+    };
+
+    components.forEach(function (component) {
+      var types = component.types || [];
+
+      if (types.indexOf("street_number") !== -1) {
+        parsed.streetNumber = component.long_name || "";
+      }
+      if (types.indexOf("route") !== -1) {
+        parsed.route = component.long_name || "";
+      }
+      if (types.indexOf("locality") !== -1) {
+        parsed.city = component.long_name || "";
+      }
+      if (types.indexOf("administrative_area_level_1") !== -1) {
+        parsed.state = component.short_name || "";
+      }
+      if (types.indexOf("postal_code") !== -1) {
+        parsed.postcode = component.long_name || "";
+      }
+      if (types.indexOf("country") !== -1) {
+        parsed.country = component.short_name || "";
+      }
+    });
+
+    return parsed;
+  }
+
+  function buildNormalizedAddressPayload(parsed) {
+    return {
+      street: [parsed.streetNumber, parsed.route]
+        .filter(function (part) {
+          return !!part;
+        })
+        .join(" "),
+      city: parsed.city || "",
+      state: parsed.state || "",
+      postcode: parsed.postcode || "",
+      country: parsed.country || "",
+    };
+  }
+
+  function applyParsedAddressToCheckoutFields(payload) {
+    debugLog("atomic apply start", payload);
+
+    clearCheckoutFieldValue("billing_city", "atomic replacement");
+    clearCheckoutFieldValue("billing_state", "atomic replacement");
+    clearCheckoutFieldValue("billing_postcode", "atomic replacement");
+    clearCheckoutFieldValue("billing_country", "atomic replacement");
+
+    setCheckoutFieldValue("billing_address_1", payload.street);
+    setCheckoutFieldValue("billing_city", payload.city);
+    setCheckoutFieldValue("billing_state", payload.state);
+    setCheckoutFieldValue("billing_postcode", payload.postcode);
+    setCheckoutFieldValue("billing_country", payload.country);
+
+    debugLog("atomic apply complete", {
+      billing_address_1: getFieldValue("billing_address_1"),
+      billing_city: getFieldValue("billing_city"),
+      billing_state: getFieldValue("billing_state"),
+      billing_postcode: getFieldValue("billing_postcode"),
+      billing_country: getFieldValue("billing_country"),
+    });
+
+    debugLog("final normalized address payload", payload);
+  }
+
+  function clearCheckoutFieldValue(fieldId, reason) {
+    var field = document.getElementById(fieldId);
+    if (!field) {
+      return;
+    }
+
+    if (!field.value) {
+      return;
+    }
+
+    debugLog("clearing/replacing old field values", {
+      fieldId: fieldId,
+      oldValue: field.value,
+      reason: reason,
+    });
+
+    field.value = "";
+
+    if (typeof jQuery !== "undefined") {
+      jQuery(field).trigger("change");
+      jQuery(field).trigger("input");
+    } else {
+      field.dispatchEvent(new Event("change", { bubbles: true }));
+      field.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  }
+
+  function isAutofillPayloadComplete() {
+    return !!(
+      getFieldValue("billing_city") &&
+      getFieldValue("billing_postcode") &&
+      getFieldValue("billing_state")
+    );
+  }
+
+  function getFieldValue(fieldId) {
+    var field = document.getElementById(fieldId);
+    return field ? field.value : null;
+  }
+
+  function getSelectOptionDetails(field, desiredValue) {
+    var options = field && field.options ? field.options : [];
+    var desiredExists = false;
+
+    for (var i = 0; i < options.length; i += 1) {
+      if (options[i].value === desiredValue) {
+        desiredExists = true;
+        break;
+      }
+    }
+
+    return {
+      optionCount: options.length,
+      desiredExists: desiredExists,
+    };
+  }
+
+  function setCheckoutFieldValue(fieldId, value) {
+    debugLog("field set requested", {
+      fieldId: fieldId,
+      desiredValue: value,
+      exists: !!document.getElementById(fieldId),
+    });
+
+    if (!value) {
+      debugLog("field set skipped", {
+        fieldId: fieldId,
+        reason: "empty mapped value",
+      });
+      return;
+    }
+
+    var field = document.getElementById(fieldId);
+    if (!field) {
+      debugLog("field set skipped", {
+        fieldId: fieldId,
+        reason: "field not found",
+      });
+      return;
+    }
+
+    debugLog("field before set", {
+      fieldId: fieldId,
+      tagName: field.tagName,
+      type: field.type,
+      beforeValue: field.value,
+    });
+
+    if (
+      (fieldId === "billing_state" || fieldId === "billing_country") &&
+      field.tagName === "SELECT"
+    ) {
+      var beforeSelectDetails = getSelectOptionDetails(field, value);
+      debugLog("select options before set", {
+        fieldId: fieldId,
+        optionCount: beforeSelectDetails.optionCount,
+        desiredValueExists: beforeSelectDetails.desiredExists,
+      });
+    }
+
+    field.value = value;
+
+    if (typeof jQuery !== "undefined") {
+      jQuery(field).trigger("change");
+      jQuery(field).trigger("input");
+      debugLog("field events triggered", {
+        fieldId: fieldId,
+        usedJQuery: true,
+        triggeredEvents: ["change", "input"],
+      });
+    } else {
+      field.dispatchEvent(new Event("change", { bubbles: true }));
+      field.dispatchEvent(new Event("input", { bubbles: true }));
+      debugLog("field events triggered", {
+        fieldId: fieldId,
+        usedJQuery: false,
+        triggeredEvents: ["change", "input"],
+      });
+    }
+
+    if (
+      (fieldId === "billing_state" || fieldId === "billing_country") &&
+      field.tagName === "SELECT"
+    ) {
+      var afterSelectDetails = getSelectOptionDetails(field, value);
+      debugLog("select status after set", {
+        fieldId: fieldId,
+        optionCount: afterSelectDetails.optionCount,
+        desiredValueExists: afterSelectDetails.desiredExists,
+        selectedValueAfterSet: field.value,
+      });
+    }
+
+    debugLog("field after set", {
+      fieldId: fieldId,
+      afterValue: field.value,
     });
   }
 
@@ -154,6 +636,13 @@
             if (typeof response.data.outOfZoneState !== "undefined") {
               wdcCheckout.outOfZoneState = response.data.outOfZoneState;
             }
+
+            if (typeof response.data.pickupStoreAddress !== "undefined") {
+              wdcCheckout.pickupStoreAddress = response.data.pickupStoreAddress;
+            }
+
+            applyPickupStoreAddressToBilling();
+            debugLog("checkout refresh triggered after pickup autofill");
             triggerCheckoutRefresh();
           } else {
             console.error(
@@ -374,6 +863,17 @@
 
     var noticesContainer = document.getElementById("wdc-notices");
     if (!noticesContainer) {
+      return;
+    }
+
+    var matchingNotice = Array.prototype.some.call(
+      noticesContainer.querySelectorAll(".wdc-notice"),
+      function (noticeItem) {
+        return noticeItem.textContent.trim() === outOfZoneState.message;
+      },
+    );
+
+    if (matchingNotice) {
       return;
     }
 

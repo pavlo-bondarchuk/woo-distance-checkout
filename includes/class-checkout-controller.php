@@ -29,10 +29,29 @@ class WDC_Checkout_Controller
             return;
         }
 
+        $google_maps_api_key = trim((string) $this->settings->get_setting('google_maps_api_key', ''));
+
+        if ('' !== $google_maps_api_key) {
+            wp_enqueue_script(
+                'google-maps-places',
+                add_query_arg(
+                    array(
+                        'key'       => $google_maps_api_key,
+                        'libraries' => 'places',
+                        'loading'   => 'async',
+                    ),
+                    'https://maps.googleapis.com/maps/api/js'
+                ),
+                array(),
+                null,
+                true
+            );
+        }
+
         wp_enqueue_script(
             'wdc-checkout',
             WDC_PLUGIN_URL . 'assets/js/checkout.js',
-            array('jquery'),
+            array('jquery', 'google-maps-places'),
             WDC_PLUGIN_VERSION,
             true
         );
@@ -53,6 +72,9 @@ class WDC_Checkout_Controller
                 'isCheckoutBlockedForTax' => $this->is_checkout_blocked_for_tax(),
                 'outOfZoneState'          => $this->get_out_of_zone_state(),
                 'maxDeliveryDistance'     => intval($this->settings->get_setting('maximum_delivery_distance', 25)),
+                'googleMapsApiKey'        => $google_maps_api_key,
+                'debugMode'               => (string) $this->settings->get_setting('debug_mode', 'no'),
+                'pickupStoreAddress'      => $this->get_selected_store_address(),
                 'notices'                 => $this->get_localized_notice_strings(),
             )
         );
@@ -126,6 +148,11 @@ class WDC_Checkout_Controller
             return;
         }
 
+        if (isset($state['shipping']['success']) && false === $state['shipping']['success']) {
+            $this->logger->error('WDC checkout blocked out-of-zone delivery attempt; top Woo notice suppressed in favor of inline WDC notice');
+            return;
+        }
+
         $message = $state['message'] ?? __('Delivery is not available for your address. Please choose pickup or update your address.', 'woo-distance-checkout');
 
         wc_add_notice($message, 'error');
@@ -191,15 +218,27 @@ class WDC_Checkout_Controller
             return array(
                 'is_out_of_zone' => true,
                 'max_distance'   => $max_distance,
-                'message'        => sprintf(
-                    /* translators: %d: maximum delivery distance in miles */
-                    __('Delivery is not available to your address. Maximum delivery distance is %d miles.', 'woo-distance-checkout'),
-                    $max_distance
-                ),
+                'message'        => $this->get_out_of_delivery_area_message(),
             );
         }
 
         return null;
+    }
+
+    /**
+     * Get the out-of-delivery-area message to show customers.
+     *
+     * Returns the admin-configured message, or the built-in default if not set.
+     *
+     * @return string
+     */
+    private function get_out_of_delivery_area_message()
+    {
+        $custom = trim((string) $this->settings->get_setting('out_of_delivery_area_message', ''));
+        if ('' !== $custom) {
+            return $custom;
+        }
+        return __('Your address is out of delivery area please call us at (916) 915-9224.', 'woo-distance-checkout');
     }
 
     /**
@@ -294,16 +333,18 @@ class WDC_Checkout_Controller
         if (! $state['success']) {
             // Address validation failed
             if (isset($state['address_validated']) && false === $state['address_validated']) {
-                $message = $state['address_validation_message'] ?? __('Delivery address failed validation. Please check your address.', 'woo-distance-checkout');
                 return array(
                     'type'    => 'error',
-                    'message' => $message,
+                    'message' => __('We could not validate this delivery address precisely enough. Please check the street, city, and ZIP code, or choose Self Pickup.', 'woo-distance-checkout'),
                 );
             }
 
             // Shipping failed → address is outside the delivery zone
             if (isset($state['shipping']['success']) && false === $state['shipping']['success']) {
-                return null;
+                return array(
+                    'type'    => 'error',
+                    'message' => $this->get_out_of_delivery_area_message(),
+                );
             }
 
             // Distance API failed
@@ -359,6 +400,29 @@ class WDC_Checkout_Controller
         return $this->store_locations->get_selected_store();
     }
 
+    private function get_selected_store_details()
+    {
+        $store_id = $this->get_selected_store();
+        $store = $this->store_locations->get_store_by_id($store_id);
+
+        if (! is_array($store)) {
+            return null;
+        }
+
+        return $store;
+    }
+
+    private function get_selected_store_address()
+    {
+        $store = $this->get_selected_store_details();
+
+        if (! is_array($store) || ! isset($store['address'])) {
+            return '';
+        }
+
+        return (string) $store['address'];
+    }
+
     public function update_checkout_via_ajax()
     {
         $this->logger->debug('WDC: update_checkout_via_ajax handler reached');
@@ -381,6 +445,7 @@ class WDC_Checkout_Controller
                 'fulfillment_method'   => $fulfillment_method,
                 'isCheckoutBlockedForTax' => $this->is_checkout_blocked_for_tax(),
                 'outOfZoneState'       => $this->get_out_of_zone_state(),
+                'pickupStoreAddress'   => $this->get_selected_store_address(),
             )
         );
     }
@@ -434,6 +499,7 @@ class WDC_Checkout_Controller
                 'store_id'   => $store_id,
                 'isCheckoutBlockedForTax' => $this->is_checkout_blocked_for_tax(),
                 'outOfZoneState'  => $this->get_out_of_zone_state(),
+                'pickupStoreAddress' => $this->get_selected_store_address(),
             )
         );
     }

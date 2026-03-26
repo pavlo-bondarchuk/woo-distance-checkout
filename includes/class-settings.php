@@ -21,6 +21,7 @@ class WDC_Settings
         'fallback_mode'              => 'block_checkout',
         'calculation_mode'           => 'mock',
         'mock_scenario'              => 'happy_path',
+        'out_of_delivery_area_message' => '',
         // Deprecated explicitly adjustable mock fields kept for backward compatibility
         'mock_distance_miles'        => 12,
         'mock_delivery_tax_rate'     => 8.25,
@@ -86,6 +87,10 @@ class WDC_Settings
         $sanitized['fallback_mode'] = $this->validate_fallback_mode(
             $input['fallback_mode'] ?? null
         );
+
+        $sanitized['out_of_delivery_area_message'] = isset($input['out_of_delivery_area_message'])
+            ? sanitize_textarea_field($input['out_of_delivery_area_message'])
+            : '';
 
         $sanitized['taxable_shipping'] = isset($input['taxable_shipping']) && 'yes' === $input['taxable_shipping'] ? 'yes' : 'no';
         $sanitized['debug_mode']       = isset($input['debug_mode']) && 'yes' === $input['debug_mode'] ? 'yes' : 'no';

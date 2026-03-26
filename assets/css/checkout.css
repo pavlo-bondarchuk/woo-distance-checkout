@@ -21,17 +21,99 @@
     margin-bottom: 1em;
 }
 
+.wdc-fulfillment-method {
+    margin-bottom: 1em;
+}
+
+.wdc-fulfillment-method h3 {
+    margin-top: 0;
+    margin-bottom: 0.75em;
+}
+
+.wdc-fulfillment-method-options {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5em;
+}
+
+@media (max-width: 480px) {
+    .wdc-fulfillment-method-options {
+        grid-template-columns: 1fr;
+    }
+}
+
+.wdc-fulfillment-method-option {
+    display: flex;
+    cursor: pointer;
+}
+
+.wdc-fulfillment-method-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.wdc-fulfillment-method-option-content {
+    display: block;
+    flex: 1;
+    padding: 0.5em 0.75em;
+    border: 2px solid rgba(0, 0, 0, 0.15);
+    border-radius: 2px;
+}
+
+.wdc-fulfillment-method-option-title {
+    display: block;
+}
+
+.wdc-fulfillment-method-option-description {
+    display: block;
+    font-size: 0.9em;
+    opacity: 0.85;
+}
+
+.wdc-fulfillment-method-input:checked+.wdc-fulfillment-method-option-content {
+    font-weight: 600;
+    border-color: currentColor;
+}
+
+.wdc-fulfillment-method-input:focus-visible+.wdc-fulfillment-method-option-content {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
 .wdc-store-selector--hidden {
     display: none !important;
 }
 
 .wdc-store-selector--visible {
     display: block !important;
+    margin-bottom: 1em;
 }
 
 .wdc-store-selector-message {
     font-size: 0.95em;
     color: #a00;
+    margin: 0;
+}
+
+.wdc-store-selector-badge {
+    display: inline-block;
+    padding: 0.75em 1em;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    background-color: #f5f5f5;
+}
+
+.wdc-store-selector-badge p {
     margin: 0;
 }
 

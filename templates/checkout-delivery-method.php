@@ -6,10 +6,10 @@ if (! isset($current_method)) {
 
 ?>
 
-<div id="wdc-fulfillment-method" class="wdc-checkout-section">
-    <h3><?php echo esc_html__('Delivery Method', 'woo-distance-checkout'); ?></h3>
-    <div class="wdc-fulfillment-method-options">
-        <label>
+<div id="wdc-fulfillment-method" class="wdc-fulfillment-method">
+    <h3><?php echo esc_html__('Choose delivery method', 'woo-distance-checkout'); ?></h3>
+    <fieldset class="wdc-fulfillment-method-options" role="radiogroup" aria-label="<?php echo esc_attr__('Choose delivery method', 'woo-distance-checkout'); ?>">
+        <label class="wdc-fulfillment-method-option">
             <input
                 type="radio"
                 name="wdc_fulfillment_method"
@@ -17,9 +17,12 @@ if (! isset($current_method)) {
                 <?php checked($current_method, 'delivery'); ?>
                 class="wdc-fulfillment-method-input"
                 data-method="delivery" />
-            <?php echo esc_html__('Delivery', 'woo-distance-checkout'); ?>
+            <span class="wdc-fulfillment-method-option-content">
+                <span class="wdc-fulfillment-method-option-title"><?php echo esc_html__('Delivery', 'woo-distance-checkout'); ?></span>
+                <span class="wdc-fulfillment-method-option-description"><?php echo esc_html__('Shipping cost depends on distance', 'woo-distance-checkout'); ?></span>
+            </span>
         </label>
-        <label>
+        <label class="wdc-fulfillment-method-option">
             <input
                 type="radio"
                 name="wdc_fulfillment_method"
@@ -27,7 +30,10 @@ if (! isset($current_method)) {
                 <?php checked($current_method, 'pickup'); ?>
                 class="wdc-fulfillment-method-input"
                 data-method="pickup" />
-            <?php echo esc_html__('Self Pickup', 'woo-distance-checkout'); ?>
+            <span class="wdc-fulfillment-method-option-content">
+                <span class="wdc-fulfillment-method-option-title"><?php echo esc_html__('Pickup', 'woo-distance-checkout'); ?></span>
+                <span class="wdc-fulfillment-method-option-description"><?php echo esc_html__('Shipping is free, tax uses store address', 'woo-distance-checkout'); ?></span>
+            </span>
         </label>
-    </div>
+    </fieldset>
 </div>

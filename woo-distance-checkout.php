@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Woo Distance Checkout
  * Description: Distance-based checkout for WooCommerce with delivery and pickup options.
- * Version: 1.0.0
+ * Version: 1.1
  * Author: Pavlo Bondarchuk
  * Author URI: https://bonddesign.top
  * License: GPL v2 or later
@@ -23,7 +23,7 @@ if (! defined('ABSPATH')) {
 define('WDC_PLUGIN_FILE', __FILE__);
 define('WDC_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WDC_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('WDC_PLUGIN_VERSION', '1.0.0');
+define('WDC_PLUGIN_VERSION', '1.1');
 define('WDC_MINIMUM_WP_VERSION', '5.0');
 define('WDC_MINIMUM_WC_VERSION', '5.0');
 define('WDC_MINIMUM_PHP_VERSION', '7.4');

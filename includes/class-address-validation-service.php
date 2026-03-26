@@ -14,6 +14,7 @@ class WDC_Address_Validation_Service
     private $settings;
     private const GOOGLE_GEOCODING_API_URL = 'https://maps.googleapis.com/maps/api/geocode/json';
     private const VALIDATION_CACHE_KEY_PREFIX = 'wdc_validation_cache_';
+    private const VALIDATION_RULE_VERSION = 'v2';
     private const DISTANCE_CACHE_KEY_PREFIX = 'wdc_distance_cache_';
 
     public function __construct()
@@ -51,8 +52,18 @@ class WDC_Address_Validation_Service
         if (!isset(WC()->session)) {
             return null;
         }
-        $cache_key = self::VALIDATION_CACHE_KEY_PREFIX . $address_hash;
-        return WC()->session->get($cache_key);
+
+        $cache_key = $this->get_validation_cache_key($address_hash);
+        $this->logger->debug('Address validation: cache key=' . $cache_key . ', version=' . self::VALIDATION_RULE_VERSION);
+
+        $cached_result = WC()->session->get($cache_key);
+        if (null === $cached_result) {
+            $this->logger->debug('Address validation: cache miss for key ' . $cache_key);
+        } else {
+            $this->logger->debug('Address validation: cache hit for key ' . $cache_key);
+        }
+
+        return $cached_result;
     }
 
     /**
@@ -66,9 +77,21 @@ class WDC_Address_Validation_Service
         if (!isset(WC()->session)) {
             return;
         }
-        $cache_key = self::VALIDATION_CACHE_KEY_PREFIX . $address_hash;
+
+        $cache_key = $this->get_validation_cache_key($address_hash);
         WC()->session->set($cache_key, $result);
-        $this->logger->debug('Address validation: cached result for hash ' . $address_hash);
+        $this->logger->debug('Address validation: cached result for key ' . $cache_key);
+    }
+
+    /**
+     * Build versioned session cache key for address validation results.
+     *
+     * @param string $address_hash Address hash.
+     * @return string Cache key.
+     */
+    private function get_validation_cache_key($address_hash)
+    {
+        return self::VALIDATION_CACHE_KEY_PREFIX . self::VALIDATION_RULE_VERSION . '_' . $address_hash;
     }
 
     /**
@@ -121,7 +144,6 @@ class WDC_Address_Validation_Service
 
         $cached = $this->get_cached_validation($address_hash);
         if ($cached !== null) {
-            $this->logger->debug('Address validation: using cached result for hash ' . $address_hash);
             return $cached;
         }
 
@@ -225,6 +247,7 @@ class WDC_Address_Validation_Service
 
         $body = wp_remote_retrieve_body($response);
         $this->logger->debug('Address validation: response body length=' . strlen($body) . ' bytes');
+        $this->logger->debug('Address validation: raw geocode response body=' . $body);
 
         $data = json_decode($body, true);
 
@@ -290,9 +313,50 @@ class WDC_Address_Validation_Service
 
         $first_result  = $results[0];
         $location_type = $first_result['geometry']['location_type'] ?? '';
+        $component_flags = $this->get_result_component_flags($first_result);
+        $has_street_level_type = $this->has_street_level_result_type($first_result);
+
+        $this->logger->debug(
+            'Address validation: parsed geocode result - formatted_address="' . ($first_result['formatted_address'] ?? '') .
+                '", place_id="' . ($first_result['place_id'] ?? '') .
+                '", location_type="' . $location_type .
+                '", address_components=' . count($first_result['address_components'] ?? [])
+        );
 
         // Check location precision
-        if (!in_array($location_type, ['ROOFTOP', 'RANGE_INTERPOLATED'], true)) {
+        if ('GEOMETRIC_CENTER' === $location_type) {
+            $missing_parts = [];
+
+            if (! $component_flags['street_number']) {
+                $missing_parts[] = 'street_number';
+            }
+            if (! $component_flags['route']) {
+                $missing_parts[] = 'route';
+            }
+            if (! $component_flags['postal_code']) {
+                $missing_parts[] = 'postal_code';
+            }
+            if (! $component_flags['locality']) {
+                $missing_parts[] = 'locality';
+            }
+            if (! $has_street_level_type) {
+                $missing_parts[] = 'street-level result type';
+            }
+
+            if (empty($missing_parts)) {
+                $this->logger->debug('Address validation: GEOMETRIC_CENTER accepted: street-level address with complete components');
+            } else {
+                $this->logger->debug('Address validation: GEOMETRIC_CENTER rejected: missing ' . implode(', ', $missing_parts));
+                return [
+                    'is_valid'     => false,
+                    'confidence'   => 0.4,
+                    'message'      => 'Address location is not precise enough (' . $location_type . ')',
+                    'coerced'      => true,
+                    'location_type' => $location_type,
+                ];
+            }
+        } elseif (!in_array($location_type, ['ROOFTOP', 'RANGE_INTERPOLATED'], true)) {
+            $this->logger->debug('Address validation: ' . $location_type . ' rejected: location type is not precise enough');
             return [
                 'is_valid'     => false,
                 'confidence'   => 0.4,
@@ -391,5 +455,53 @@ class WDC_Address_Validation_Service
         }
 
         return false;
+    }
+
+    /**
+     * Determine which street-level components exist on a geocoding result.
+     *
+     * @param array $geocoded_result Geocoding result with address_components.
+     * @return array<string, bool>
+     */
+    private function get_result_component_flags($geocoded_result)
+    {
+        $flags = [
+            'street_number' => false,
+            'route'         => false,
+            'postal_code'   => false,
+            'locality'      => false,
+        ];
+
+        foreach ($geocoded_result['address_components'] ?? [] as $component) {
+            $types = $component['types'] ?? [];
+
+            if (in_array('street_number', $types, true)) {
+                $flags['street_number'] = true;
+            }
+            if (in_array('route', $types, true)) {
+                $flags['route'] = true;
+            }
+            if (in_array('postal_code', $types, true)) {
+                $flags['postal_code'] = true;
+            }
+            if (in_array('locality', $types, true)) {
+                $flags['locality'] = true;
+            }
+        }
+
+        return $flags;
+    }
+
+    /**
+     * Determine whether Google classified the result as a street-level address.
+     *
+     * @param array $geocoded_result Geocoding result with types.
+     * @return bool True when result types include street_address or premise.
+     */
+    private function has_street_level_result_type($geocoded_result)
+    {
+        $result_types = $geocoded_result['types'] ?? [];
+
+        return in_array('street_address', $result_types, true) || in_array('premise', $result_types, true);
     }
 }

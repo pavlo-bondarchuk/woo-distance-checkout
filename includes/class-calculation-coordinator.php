@@ -137,7 +137,8 @@ class WDC_Calculation_Coordinator
         $this->logger->debug('Shipping response: ' . wp_json_encode($shipping_response));
 
         if (! $shipping_response['success']) {
-            $this->logger->debug('Delivery: shipping calculation failed (distance exceeded)');
+            $max_distance = intval($this->settings->get_setting('maximum_delivery_distance'));
+            $this->logger->debug('Delivery: distance over limit - distance=' . $distance_miles . ', max=' . $max_distance);
             return array(
                 'success'              => false,
                 'fulfillment_method'   => 'delivery',
@@ -148,7 +149,11 @@ class WDC_Calculation_Coordinator
                 'shipping'             => $shipping_response,
                 'tax'                  => null,
                 'shipping_required'    => false,
-                'message'              => 'Delivery is outside the allowed zone.',
+                'message'              => sprintf(
+                    /* translators: %d: maximum delivery distance in miles */
+                    __('Delivery is not available to your address. Maximum delivery distance is %d miles.', 'woo-distance-checkout'),
+                    $max_distance
+                ),
             );
         }
 

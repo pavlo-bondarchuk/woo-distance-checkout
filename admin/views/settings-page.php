@@ -176,6 +176,24 @@ $current_settings = $settings->get_all_settings();
 
             <tr>
                 <th scope="row">
+                    <label for="wdc-out-of-delivery-area-message">
+                        <?php echo esc_html__('Out of delivery area message', 'woo-distance-checkout'); ?>
+                    </label>
+                </th>
+                <td>
+                    <textarea
+                        id="wdc-out-of-delivery-area-message"
+                        name="wdc_settings[out_of_delivery_area_message]"
+                        rows="3"
+                        class="large-text"><?php echo esc_textarea($current_settings['out_of_delivery_area_message']); ?></textarea>
+                    <p class="description">
+                        <?php echo esc_html__('Shown to customers when their address is outside the allowed delivery distance. Leave empty to use the default message.', 'woo-distance-checkout'); ?>
+                    </p>
+                </td>
+            </tr>
+
+            <tr>
+                <th scope="row">
                     <label for="wdc-taxable-shipping">
                         <?php echo esc_html__('Taxable Shipping', 'woo-distance-checkout'); ?>
                     </label>

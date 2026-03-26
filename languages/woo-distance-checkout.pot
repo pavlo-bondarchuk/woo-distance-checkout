@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-03-25T13:32:47+00:00\n"
+"POT-Creation-Date: 2026-03-25T00:00:00+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: woo-distance-checkout\n"
@@ -216,7 +216,15 @@ msgstr ""
 msgid "Maximum distance for delivery option availability."
 msgstr ""
 
-#: admin/views/settings-page.php:180
+#: admin/views/settings-page.php:181
+msgid "Out of delivery area message"
+msgstr ""
+
+#: admin/views/settings-page.php:192
+msgid "Shown to customers when their address is outside the allowed delivery distance. Leave empty to use the default message."
+msgstr ""
+
+#: admin/views/settings-page.php:198
 msgid "Taxable Shipping"
 msgstr ""
 
@@ -358,13 +366,6 @@ msgstr ""
 msgid "Total unavailable until taxes are calculated."
 msgstr ""
 
-#. translators: %d: maximum delivery distance in miles
-#: includes/class-checkout-controller.php:196
-#: includes/class-checkout-controller.php:311
-#, php-format
-msgid "Delivery is not available to your address. Maximum delivery distance is %d miles."
-msgstr ""
-
 #: includes/class-checkout-controller.php:225
 msgid "Tax calculation failed."
 msgstr ""
@@ -374,10 +375,14 @@ msgid "We are unable to calculate taxes for your order at this time. Please try 
 msgstr ""
 
 #: includes/class-checkout-controller.php:297
-msgid "Delivery address failed validation. Please check your address."
+msgid "We could not validate this delivery address precisely enough. Please check the street, city, and ZIP code, or choose Self Pickup."
 msgstr ""
 
 #: includes/class-checkout-controller.php:321
+msgid "Your address is out of delivery area please call us at (916) 915-9224."
+msgstr ""
+
+#: includes/class-checkout-controller.php:325
 msgid "Unable to calculate delivery distance. Please check your address or contact us."
 msgstr ""
 
@@ -394,15 +399,27 @@ msgid "Woo Distance Checkout requires WooCommerce to be installed and activated.
 msgstr ""
 
 #: templates/checkout-delivery-method.php:10
-msgid "Delivery Method"
+msgid "Choose delivery method"
 msgstr ""
 
 #: templates/checkout-delivery-method.php:20
 msgid "Delivery"
 msgstr ""
 
-#: templates/checkout-delivery-method.php:30
-msgid "Self Pickup"
+#: templates/checkout-delivery-method.php:21
+msgid "Shipping cost depends on distance"
+msgstr ""
+
+#: templates/checkout-delivery-method.php:31
+msgid "Pickup"
+msgstr ""
+
+#: templates/checkout-delivery-method.php:32
+msgid "Shipping is free, tax uses store address"
+msgstr ""
+
+#: templates/checkout-store-selector.php:18
+msgid "Pickup Location"
 msgstr ""
 
 #: templates/checkout-store-selector.php:18

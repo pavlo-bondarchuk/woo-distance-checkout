@@ -27,7 +27,7 @@
   document.addEventListener("DOMContentLoaded", function () {
     initializeFulfillmentMethod();
     initializeStoreSelector();
-    initializeAddressAutocomplete();
+    retryAutocompleteInit(0);
     updateCheckoutBlockedState();
     updateOutOfZoneNotice();
 
@@ -147,6 +147,9 @@
     }
   }
 
+  var autocompleteInitialized = false;
+  var autocompleteRetryTimer = null;
+
   function initializeStoreSelector() {
     var storeSelect = document.getElementById("wdc-store-selector-input");
 
@@ -259,16 +262,62 @@
         typeof google !== "undefined" && !!google.maps && !!google.maps.places,
     });
 
+    if (autocompleteInitialized) {
+      debugLog("autocomplete already initialized - skipping");
+      return;
+    }
+
     if (
       !wdcCheckout ||
       !wdcCheckout.googleMapsApiKey ||
       typeof google === "undefined" ||
-      !google.maps ||
-      !google.maps.places
+      !google.maps
     ) {
       debugLog("autocomplete initialization skipped", {
-        reason: "missing config or google maps places",
+        reason: "missing config or google maps",
       });
+      return;
+    }
+
+    if (!google.maps.places) {
+      debugLog("autocomplete initialization deferred - places not ready yet");
+      retryAutocompleteInit(0);
+      return;
+    }
+
+    attachAutocompleteToAddressField();
+  }
+
+  function retryAutocompleteInit(attemptNumber) {
+    if (autocompleteInitialized) {
+      debugLog("autocomplete already initialized during retry - canceling");
+      return;
+    }
+
+    if (attemptNumber >= 25) {
+      debugLog("max retries reached - autocomplete init abandoned");
+      return;
+    }
+
+    if (typeof google !== "undefined" && google.maps && google.maps.places) {
+      debugLog("places became ready - initializing autocomplete", {
+        attemptNumber: attemptNumber,
+      });
+      attachAutocompleteToAddressField();
+      return;
+    }
+
+    debugLog("autocomplete retry attempt", {
+      attemptNumber: attemptNumber + 1,
+    });
+
+    autocompleteRetryTimer = setTimeout(function () {
+      retryAutocompleteInit(attemptNumber + 1);
+    }, 200);
+  }
+
+  function attachAutocompleteToAddressField() {
+    if (autocompleteInitialized) {
       return;
     }
 
@@ -283,104 +332,117 @@
       return;
     }
 
-    addressInput.addEventListener("keydown", function (event) {
-      if (event.key !== "Enter") {
-        return;
+    try {
+      var autocomplete = new google.maps.places.Autocomplete(addressInput, {
+        fields: ["address_components"],
+        types: ["address"],
+      });
+
+      autocompleteInitialized = true;
+
+      if (autocompleteRetryTimer !== null) {
+        clearTimeout(autocompleteRetryTimer);
+        autocompleteRetryTimer = null;
       }
 
-      var pacItemSelected = !!document.querySelector(".pac-item-selected");
-      var pacContainerVisible = !!document.querySelector(
-        ".pac-container:not([style*='display: none']) .pac-item",
-      );
-
-      debugLog("Enter key intercepted in billing_address_1", {
-        suggestionSelectionDetected: pacItemSelected,
-        suggestionListVisible: pacContainerVisible,
+      debugLog("autocomplete initialized successfully", {
+        fieldId: "billing_address_1",
+        fields: ["address_components"],
+        types: ["address"],
       });
 
-      if (pacContainerVisible) {
-        event.preventDefault();
-        debugLog("suggestion selection detected / not detected", {
-          detected: pacItemSelected,
-          action: "prevented native enter submit while suggestions visible",
+      addressInput.addEventListener("keydown", function (event) {
+        if (event.key !== "Enter") {
+          return;
+        }
+
+        var pacItemSelected = !!document.querySelector(".pac-item-selected");
+        var pacContainerVisible = !!document.querySelector(
+          ".pac-container:not([style*='display: none']) .pac-item",
+        );
+
+        debugLog("Enter key intercepted in billing_address_1", {
+          suggestionSelectionDetected: pacItemSelected,
+          suggestionListVisible: pacContainerVisible,
         });
-      } else {
-        debugLog("suggestion selection detected / not detected", {
-          detected: false,
-          action: "no forced checkout refresh on plain enter",
+
+        if (pacContainerVisible) {
+          event.preventDefault();
+          debugLog("suggestion selection detected / not detected", {
+            detected: pacItemSelected,
+            action: "prevented native enter submit while suggestions visible",
+          });
+        } else {
+          debugLog("suggestion selection detected / not detected", {
+            detected: false,
+            action: "no forced checkout refresh on plain enter",
+          });
+        }
+      });
+
+      autocomplete.addListener("place_changed", function () {
+        debugLog("place_changed fired");
+
+        var place = autocomplete.getPlace();
+        debugLog("raw place summary", {
+          hasPlace: !!place,
+          placeId: place && place.place_id ? place.place_id : null,
+          name: place && place.name ? place.name : null,
+          formattedAddress:
+            place && place.formatted_address ? place.formatted_address : null,
+          hasAddressComponents: !!(place && place.address_components),
         });
-      }
-    });
 
-    var autocomplete = new google.maps.places.Autocomplete(addressInput, {
-      fields: ["address_components"],
-      types: ["address"],
-    });
+        if (!place || !place.address_components) {
+          debugLog("place_changed aborted", {
+            reason: "missing place or address_components",
+          });
+          return;
+        }
 
-    debugLog("autocomplete initialized successfully", {
-      fieldId: "billing_address_1",
-      fields: ["address_components"],
-      types: ["address"],
-    });
+        debugLog("raw address_components", place.address_components);
 
-    autocomplete.addListener("place_changed", function () {
-      debugLog("place_changed fired");
+        var parsedAddress = parseGoogleAddressComponents(
+          place.address_components,
+        );
+        var normalizedPayload = buildNormalizedAddressPayload(parsedAddress);
 
-      var place = autocomplete.getPlace();
-      debugLog("raw place summary", {
-        hasPlace: !!place,
-        placeId: place && place.place_id ? place.place_id : null,
-        name: place && place.name ? place.name : null,
-        formattedAddress:
-          place && place.formatted_address ? place.formatted_address : null,
-        hasAddressComponents: !!(place && place.address_components),
-      });
-
-      if (!place || !place.address_components) {
-        debugLog("place_changed aborted", {
-          reason: "missing place or address_components",
+        debugLog("parsed mapped values", {
+          street: normalizedPayload.street,
+          city: normalizedPayload.city,
+          state: normalizedPayload.state,
+          zip: normalizedPayload.postcode,
+          country: normalizedPayload.country,
         });
-        return;
-      }
 
-      debugLog("raw address_components", place.address_components);
+        debugLog("parsed payload before apply", normalizedPayload);
+        applyParsedAddressToCheckoutFields(normalizedPayload);
 
-      var parsedAddress = parseGoogleAddressComponents(
-        place.address_components,
-      );
-      var normalizedPayload = buildNormalizedAddressPayload(parsedAddress);
-
-      debugLog("parsed mapped values", {
-        street: normalizedPayload.street,
-        city: normalizedPayload.city,
-        state: normalizedPayload.state,
-        zip: normalizedPayload.postcode,
-        country: normalizedPayload.country,
-      });
-
-      debugLog("parsed payload before apply", normalizedPayload);
-      applyParsedAddressToCheckoutFields(normalizedPayload);
-
-      debugLog("final DOM snapshot after autofill", {
-        billing_address_1: getFieldValue("billing_address_1"),
-        billing_city: getFieldValue("billing_city"),
-        billing_state: getFieldValue("billing_state"),
-        billing_postcode: getFieldValue("billing_postcode"),
-        billing_country: getFieldValue("billing_country"),
-      });
-
-      if (!isAutofillPayloadComplete()) {
-        debugLog("skipped checkout refresh because payload incomplete", {
+        debugLog("final DOM snapshot after autofill", {
+          billing_address_1: getFieldValue("billing_address_1"),
           billing_city: getFieldValue("billing_city"),
           billing_state: getFieldValue("billing_state"),
           billing_postcode: getFieldValue("billing_postcode"),
+          billing_country: getFieldValue("billing_country"),
         });
-        return;
-      }
 
-      debugLog("checkout refresh fired after complete autofill");
-      triggerCheckoutRefresh();
-    });
+        if (!isAutofillPayloadComplete()) {
+          debugLog("skipped checkout refresh because payload incomplete", {
+            billing_city: getFieldValue("billing_city"),
+            billing_state: getFieldValue("billing_state"),
+            billing_postcode: getFieldValue("billing_postcode"),
+          });
+          return;
+        }
+
+        debugLog("checkout refresh fired after complete autofill");
+        triggerCheckoutRefresh();
+      });
+    } catch (error) {
+      debugLog("autocomplete initialization failed", {
+        error: error.message,
+      });
+    }
   }
 
   function parseGoogleAddressComponents(components) {

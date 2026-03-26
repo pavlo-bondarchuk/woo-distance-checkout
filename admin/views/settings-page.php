@@ -17,7 +17,7 @@ $current_settings = $settings->get_all_settings();
             <tr>
                 <th scope="row">
                     <label for="wdc-google-maps-api-key">
-                        <?php echo esc_html__('Google Maps API Key', 'woo-distance-checkout'); ?>
+                        <?php echo esc_html__('Google Frontend API Key', 'woo-distance-checkout'); ?>
                     </label>
                 </th>
                 <td>
@@ -28,7 +28,26 @@ $current_settings = $settings->get_all_settings();
                         value="<?php echo esc_attr($current_settings['google_maps_api_key']); ?>"
                         class="regular-text" />
                     <p class="description">
-                        <?php echo esc_html__('Your Google Maps Distance Matrix API key.', 'woo-distance-checkout'); ?>
+                        <?php echo esc_html__('Used for checkout address autocomplete.', 'woo-distance-checkout'); ?>
+                    </p>
+                </td>
+            </tr>
+
+            <tr>
+                <th scope="row">
+                    <label for="wdc-google-maps-server-api-key">
+                        <?php echo esc_html__('Google Backend API Key', 'woo-distance-checkout'); ?>
+                    </label>
+                </th>
+                <td>
+                    <input
+                        type="password"
+                        id="wdc-google-maps-server-api-key"
+                        name="wdc_settings[google_maps_server_api_key]"
+                        value="<?php echo esc_attr($current_settings['google_maps_server_api_key']); ?>"
+                        class="regular-text" />
+                    <p class="description">
+                        <?php echo esc_html__('Used for Geocoding and Distance Matrix requests from the server.', 'woo-distance-checkout'); ?>
                     </p>
                 </td>
             </tr>

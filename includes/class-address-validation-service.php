@@ -192,11 +192,20 @@ class WDC_Address_Validation_Service
      */
     private function geocode_address($address_string, $address_hash = '')
     {
-        $api_key = $this->settings->get_setting('google_maps_api_key');
+        $backend_key = trim((string) $this->settings->get_setting('google_maps_server_api_key', ''));
+        $frontend_key = trim((string) $this->settings->get_setting('google_maps_api_key', ''));
+        $api_key = $backend_key;
+        $key_source = 'google_maps_server_api_key';
 
-        // DEBUG: Log key retrieval
+        if ('' === $api_key && '' !== $frontend_key) {
+            $api_key = $frontend_key;
+            $key_source = 'google_maps_api_key';
+            $this->logger->debug('Using frontend Google key as temporary backend fallback');
+        }
+
         $key_length = strlen((string) $api_key);
-        $this->logger->debug('Address validation: geocoding API key retrieval - key_length=' . $key_length . ', settings_key=google_maps_api_key');
+        $key_last4 = $key_length >= 4 ? substr((string) $api_key, -4) : (string) $api_key;
+        $this->logger->debug('Address validation: geocoding key source=' . $key_source . ', key_length=' . $key_length . ', key_last4=' . $key_last4);
 
         if (empty($api_key)) {
             $this->logger->error('Address validation: Google Maps API key not configured');
@@ -216,7 +225,7 @@ class WDC_Address_Validation_Service
             ];
         }
 
-        $this->logger->debug('Address validation: geocoding API key loaded successfully - length=' . strlen($api_key));
+        $this->logger->debug('Address validation: geocoding API key loaded successfully - source=' . $key_source . ', length=' . strlen($api_key) . ', last4=' . $key_last4);
 
         // Build query args
         $query_args = [

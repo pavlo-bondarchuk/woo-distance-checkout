@@ -31,6 +31,13 @@ class WDC_Checkout_Controller
 
         $google_maps_api_key = trim((string) $this->settings->get_setting('google_maps_api_key', ''));
 
+        $frontend_key_length = strlen($google_maps_api_key);
+        $frontend_key_last4 = $frontend_key_length >= 4 ? substr($google_maps_api_key, -4) : $google_maps_api_key;
+
+        if ($this->settings->is_debug_enabled()) {
+            $this->logger->debug('Checkout frontend script key source=google_maps_api_key, key_length=' . $frontend_key_length . ', key_last4=' . $frontend_key_last4);
+        }
+
         if ('' !== $google_maps_api_key) {
             wp_enqueue_script(
                 'google-maps-places',

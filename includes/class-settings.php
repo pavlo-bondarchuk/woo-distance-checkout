@@ -8,6 +8,7 @@ class WDC_Settings
 
     private $defaults = array(
         'google_maps_api_key'        => '',
+        'google_maps_server_api_key' => '',
         'tax_api_key'                => '',
         'store_address'              => '',
         'rate_per_mile'              => 3.00,
@@ -51,6 +52,7 @@ class WDC_Settings
         $sanitized = array();
 
         $sanitized['google_maps_api_key'] = isset($input['google_maps_api_key']) ? sanitize_text_field($input['google_maps_api_key']) : '';
+        $sanitized['google_maps_server_api_key'] = isset($input['google_maps_server_api_key']) ? sanitize_text_field($input['google_maps_server_api_key']) : '';
         $sanitized['tax_api_key']         = isset($input['tax_api_key']) ? sanitize_text_field($input['tax_api_key']) : '';
         $sanitized['store_address']       = isset($input['store_address']) ? sanitize_textarea_field($input['store_address']) : '';
 

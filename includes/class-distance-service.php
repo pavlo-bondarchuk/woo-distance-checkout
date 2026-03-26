@@ -120,23 +120,39 @@ class WDC_Distance_Service
             return;
         }
 
-        if (empty($option_value['google_maps_api_key'])) {
-            $this->logger->debug('Live distance: stored google_maps_api_key is empty');
+        $server_key = isset($option_value['google_maps_server_api_key']) ? trim((string) $option_value['google_maps_server_api_key']) : '';
+        $frontend_key = isset($option_value['google_maps_api_key']) ? trim((string) $option_value['google_maps_api_key']) : '';
+
+        if ('' === $server_key && '' === $frontend_key) {
+            $this->logger->debug('Live distance: stored keys are empty for both google_maps_server_api_key and google_maps_api_key');
             return;
         }
 
-        $stored_key = $option_value['google_maps_api_key'];
+        $stored_key = '' !== $server_key ? $server_key : $frontend_key;
+        $stored_source = '' !== $server_key ? 'google_maps_server_api_key' : 'google_maps_api_key';
         $stored_length = strlen($stored_key);
-        $stored_hash = md5($stored_key);
-        // Log the hash so we can verify the key is the same on retest
-        $this->logger->debug('Live distance: stored key hash=' . $stored_hash . ', length=' . $stored_length);
+        $stored_last4 = $stored_length >= 4 ? substr($stored_key, -4) : $stored_key;
+        $this->logger->debug('Live distance: stored key source=' . $stored_source . ', length=' . $stored_length . ', last4=' . $stored_last4);
     }
 
     private function get_live_distance($origin_address, $destination_address)
     {
         $this->verify_stored_key_option();
 
-        $api_key = $this->settings->get_setting('google_maps_api_key');
+        $server_key = trim((string) $this->settings->get_setting('google_maps_server_api_key', ''));
+        $frontend_key = trim((string) $this->settings->get_setting('google_maps_api_key', ''));
+        $api_key = $server_key;
+        $key_source = 'google_maps_server_api_key';
+
+        if ('' === $api_key && '' !== $frontend_key) {
+            $api_key = $frontend_key;
+            $key_source = 'google_maps_api_key';
+            $this->logger->debug('Using frontend Google key as temporary backend fallback');
+        }
+
+        $key_length = strlen((string) $api_key);
+        $key_last4 = $key_length >= 4 ? substr((string) $api_key, -4) : (string) $api_key;
+        $this->logger->debug('Live distance: distance matrix key source=' . $key_source . ', key_length=' . $key_length . ', key_last4=' . $key_last4);
 
         // Audit API key retrieval
         if (empty($api_key)) {
@@ -176,8 +192,7 @@ class WDC_Distance_Service
         // Log key diagnostics
         $key_length = strlen($api_key);
         $key_last4 = substr($api_key, -4);
-        $key_hash = md5($api_key);
-        $this->logger->debug('Live distance: API key diagnostic - length=' . $key_length . ', last4=' . $key_last4 . ', md5=' . $key_hash);
+        $this->logger->debug('Live distance: API key diagnostic - source=' . $key_source . ', length=' . $key_length . ', last4=' . $key_last4);
 
         $timeout = $this->settings->get_setting('api_timeout', 10); // Default 10 seconds
 

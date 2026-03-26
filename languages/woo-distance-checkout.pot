@@ -157,11 +157,19 @@ msgid "Woo Distance Checkout Settings"
 msgstr ""
 
 #: admin/views/settings-page.php:20
-msgid "Google Maps API Key"
+msgid "Google Frontend API Key"
 msgstr ""
 
 #: admin/views/settings-page.php:31
-msgid "Your Google Maps Distance Matrix API key."
+msgid "Used for checkout address autocomplete."
+msgstr ""
+
+#: admin/views/settings-page.php:40
+msgid "Google Backend API Key"
+msgstr ""
+
+#: admin/views/settings-page.php:52
+msgid "Used for Geocoding and Distance Matrix requests from the server."
 msgstr ""
 
 #: admin/views/settings-page.php:39

@@ -972,7 +972,9 @@
       addressFields.forEach(function (fieldId) {
         var field = document.getElementById(fieldId);
         if (field) {
-          var wrapper = field.closest(".form-group, .woocommerce-form-group, p");
+          var wrapper = field.closest(
+            ".form-group, .woocommerce-form-group, p",
+          );
           if (wrapper) {
             wrapper.classList.add("wdc-billing-field--hidden");
             debugLog("address field wrapper hidden", { fieldId: fieldId });
@@ -984,7 +986,9 @@
       addressFields.forEach(function (fieldId) {
         var field = document.getElementById(fieldId);
         if (field) {
-          var wrapper = field.closest(".form-group, .woocommerce-form-group, p");
+          var wrapper = field.closest(
+            ".form-group, .woocommerce-form-group, p",
+          );
           if (wrapper) {
             wrapper.classList.remove("wdc-billing-field--hidden");
             debugLog("address field wrapper shown", { fieldId: fieldId });

@@ -22,13 +22,18 @@ class WDC_Cart_Totals
      */
     public function apply_cart_fees($cart)
     {
-        $this->logger->debug('Cart totals: applying WDC values');
+        $this->logger->debug('=== Cart Totals: apply_cart_fees START ===');
 
         $checkout_controller = new WDC_Checkout_Controller();
         $state               = $checkout_controller->get_calculation_state();
 
+        $this->logger->debug('Calculation state success: ' . ($state['success'] ? 'yes' : 'no'));
+        $this->logger->debug('Fulfillment method: ' . ($state['fulfillment_method'] ?? 'unknown'));
+        $this->logger->debug('Shipping required: ' . ($state['shipping_required'] ? 'yes' : 'no'));
+
         if (! isset($state['success']) || ! $state['success']) {
             $this->logger->debug('Cart totals: no WDC totals due to state failure: ' . ($state['message'] ?? 'unknown'));
+            $this->logger->debug('=== Cart Totals: apply_cart_fees END (NO FEES) ===');
             return;
         }
 
@@ -40,9 +45,9 @@ class WDC_Cart_Totals
         // Delivery row
         if ($shipping_amount > 0) {
             $cart->add_fee(__('Shipping', 'woo-distance-checkout'), $shipping_amount, false, '');
-            $this->logger->debug('Cart totals: Shipping row added: ' . $shipping_amount);
+            $this->logger->debug('✓ Shipping fee added: ' . $shipping_amount);
         } else {
-            $this->logger->debug('Cart totals: No shipping row added (pickup or zero shipping)');
+            $this->logger->debug('No shipping fee (pickup or zero amount)');
         }
 
         // Tax calculation
@@ -52,6 +57,7 @@ class WDC_Cart_Totals
 
         if (isset($state['tax']['success']) && $state['tax']['success'] && isset($state['tax']['tax_rate'])) {
             $tax_rate = floatval($state['tax']['tax_rate']);
+            $this->logger->debug('Tax rate available: ' . $tax_rate . '%');
 
             $subtotal = floatval($cart->get_subtotal());
             $sales_tax_amount = round($subtotal * ($tax_rate / 100), wc_get_price_decimals());
@@ -63,22 +69,22 @@ class WDC_Cart_Totals
 
             if ($sales_tax_amount > 0) {
                 $cart->add_fee(__('Sales Tax', 'woo-distance-checkout'), $sales_tax_amount, false, '');
-                $this->logger->debug('Cart totals: Sales Tax row added: ' . $sales_tax_amount . ' @ ' . $tax_rate . '%');
+                $this->logger->debug('✓ Sales Tax fee added: ' . $sales_tax_amount . ' @ ' . $tax_rate . '%');
             } else {
-                $this->logger->debug('Cart totals: Sales Tax amount zero, no row added');
+                $this->logger->debug('Sales Tax amount is zero, no fee added');
             }
 
             if ($shipping_tax_amount > 0) {
                 $cart->add_fee(__('Shipping Tax', 'woo-distance-checkout'), $shipping_tax_amount, false, '');
-                $this->logger->debug('Cart totals: Shipping Tax row added: ' . $shipping_tax_amount . ' @ ' . $tax_rate . '%');
+                $this->logger->debug('✓ Shipping Tax fee added: ' . $shipping_tax_amount . ' @ ' . $tax_rate . '%');
             } else {
-                $this->logger->debug('Cart totals: Shipping Tax amount zero, no row added');
+                $this->logger->debug('Shipping Tax amount is zero, no fee added');
             }
         } else {
-            $this->logger->debug('Cart totals: Tax row skipped (no tax rate available)');
+            $this->logger->debug('Tax calculation failed or no tax rate available');
         }
 
-        $this->logger->debug('Cart totals: final applied amounts -> shipping=' . $shipping_amount . ', sales_tax=' . $sales_tax_amount . ', shipping_tax=' . $shipping_tax_amount);
+        $this->logger->debug('=== Cart Totals: apply_cart_fees END (FEES APPLIED) ===');
     }
 
     public function apply_sales_tax($cart, $tax_amount)

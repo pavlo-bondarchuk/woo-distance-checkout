@@ -58,14 +58,19 @@ class WDC_Calculation_Coordinator
      */
     private function calculate_delivery()
     {
+        $this->logger->debug('=== Calculation Coordinator: DELIVERY calculation START ===');
+
         $store_id = $this->store_locations->get_selected_store();
         $store    = $this->store_locations->get_store_by_id($store_id);
 
+        $this->logger->debug('Store ID: ' . $store_id . ', Store: ' . wp_json_encode($store));
+
         $customer_address = $this->address_resolver->get_checkout_address();
+        $this->logger->debug('Customer address resolved: ' . wp_json_encode($customer_address));
 
         // Validate customer address is complete
         if (! $this->address_resolver->validate_address($customer_address)) {
-            $this->logger->debug('Delivery: customer address incomplete');
+            $this->logger->error('DELIVERY BLOCKED: customer address incomplete - ' . wp_json_encode($customer_address));
             return array(
                 'success'              => false,
                 'fulfillment_method'   => 'delivery',
@@ -79,6 +84,8 @@ class WDC_Calculation_Coordinator
                 'message'              => 'Delivery address is incomplete.',
             );
         }
+
+        $this->logger->debug('Address validation passed, address: ' . $this->address_resolver->address_to_string($customer_address));
 
         // Strict address validation for live delivery mode
         // (prevents Google Distance Matrix from coercing bad addresses)

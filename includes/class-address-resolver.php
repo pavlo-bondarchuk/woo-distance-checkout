@@ -3,6 +3,13 @@
 class WDC_Address_Resolver
 {
 
+    private $logger;
+
+    public function __construct()
+    {
+        $this->logger = new WDC_Logger();
+    }
+
     public function get_checkout_address()
     {
         // Priority 1: WC()->customer — populated from post_data by WC before woocommerce_cart_calculate_fees.
@@ -17,16 +24,23 @@ class WDC_Address_Resolver
                 'country' => $customer->get_billing_country(),
             );
 
-            if ($this->validate_address($this->normalize_address($address))) {
-                return $this->normalize_address($address);
+            $normalized = $this->normalize_address($address);
+            if ($this->validate_address($normalized)) {
+                $this->logger->debug('Address resolved from WC()->customer: ' . $this->address_to_string($normalized));
+                return $normalized;
             }
+            $this->logger->debug('Address from WC()->customer failed validation: ' . wp_json_encode($address));
         }
 
         // Priority 2: parse $_POST['post_data'] — billing fields encoded as URL string
         // during update_order_review AJAX (fields are not top-level $_POST keys).
         $post_data_address = $this->parse_post_data_address();
         if ($post_data_address && $this->validate_address($post_data_address)) {
+            $this->logger->debug('Address resolved from $_POST[post_data]: ' . $this->address_to_string($post_data_address));
             return $post_data_address;
+        }
+        if ($post_data_address) {
+            $this->logger->debug('Address from $_POST[post_data] failed validation: ' . wp_json_encode($post_data_address));
         }
 
         // Priority 3: top-level $_POST keys (direct AJAX calls, non-standard contexts).
@@ -39,7 +53,9 @@ class WDC_Address_Resolver
                 'zip'     => isset($_POST['billing_postcode']) ? sanitize_text_field(wp_unslash($_POST['billing_postcode'])) : '',
                 'country' => isset($_POST['billing_country']) ? sanitize_text_field(wp_unslash($_POST['billing_country'])) : '',
             );
-            return $this->normalize_address($address);
+            $normalized = $this->normalize_address($address);
+            $this->logger->debug('Address resolved from top-level $_POST: ' . $this->address_to_string($normalized));
+            return $normalized;
         }
 
         // Priority 4: WC()->checkout->get_value() fallback.
@@ -52,10 +68,16 @@ class WDC_Address_Resolver
                 'zip'     => WC()->checkout->get_value('billing_postcode'),
                 'country' => WC()->checkout->get_value('billing_country'),
             );
-            return $this->normalize_address($address);
+            $normalized = $this->normalize_address($address);
+            if (!empty($normalized['street'])) {
+                $this->logger->debug('Address resolved from WC()->checkout: ' . $this->address_to_string($normalized));
+                return $normalized;
+            }
         }
 
-        return $this->normalize_address(array());
+        $empty_normalized = $this->normalize_address(array());
+        $this->logger->debug('Address resolution failed - returning empty address');
+        return $empty_normalized;
     }
 
     /**
@@ -69,24 +91,32 @@ class WDC_Address_Resolver
     private function parse_post_data_address()
     {
         if (empty($_POST['post_data'])) { // phpcs:ignore WordPress.Security.NonceVerification
+            $this->logger->debug('Address: $_POST[post_data] is empty');
             return null;
         }
 
         $post_data = array();
         wp_parse_str(wp_unslash($_POST['post_data']), $post_data); // phpcs:ignore WordPress.Security.NonceVerification
 
+        $this->logger->debug('Address: parsed post_data has keys: ' . implode(', ', array_keys($post_data)));
+
         if (empty($post_data['billing_address_1'])) {
+            $this->logger->debug('Address: post_data missing billing_address_1');
             return null;
         }
 
-        return $this->normalize_address(array(
+        $parsed_address = array(
             'street'  => sanitize_text_field($post_data['billing_address_1']),
             'street2' => isset($post_data['billing_address_2']) ? sanitize_text_field($post_data['billing_address_2']) : '',
             'city'    => isset($post_data['billing_city']) ? sanitize_text_field($post_data['billing_city']) : '',
             'state'   => isset($post_data['billing_state']) ? sanitize_text_field($post_data['billing_state']) : '',
             'zip'     => isset($post_data['billing_postcode']) ? sanitize_text_field($post_data['billing_postcode']) : '',
             'country' => isset($post_data['billing_country']) ? sanitize_text_field($post_data['billing_country']) : '',
-        ));
+        );
+
+        $this->logger->debug('Address: parsed from post_data: ' . wp_json_encode($parsed_address));
+
+        return $this->normalize_address($parsed_address);
     }
 
     public function normalize_address($address)

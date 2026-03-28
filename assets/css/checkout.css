@@ -184,4 +184,33 @@ button.wdc-blocked:focus {
 .wdc-hidden {
     display: none !important;
 }
+
+/* Billing address fields visibility toggle */
+.wdc-billing-field--hidden {
+    opacity: 0;
+    overflow: hidden;
+    max-height: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.3s ease, max-height 0.3s ease, margin 0.3s ease, padding 0.3s ease, visibility 0.3s ease;
+}
+
+.wdc-billing-field--hidden input,
+.wdc-billing-field--hidden select,
+.wdc-billing-field--hidden textarea {
+    border: none !important;
+    padding: 0 !important;
+    height: 0 !important;
+    min-height: 0 !important;
+}
+
+/* Visible state - smooth appearance */
+.form-group,
+.woocommerce-form-group,
+p {
+    transition: opacity 0.3s ease, max-height 0.3s ease, margin 0.3s ease, padding 0.3s ease, visibility 0.3s ease;
+}
 }

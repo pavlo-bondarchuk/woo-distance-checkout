@@ -37,6 +37,7 @@
     );
     if (selected) {
       setStoreSelectorVisibility(selected.value);
+      toggleBillingAddressFieldsVisibility(selected.value);
     }
 
     // Listen for checkout updates and reapply blocked state styling and out-of-zone notice
@@ -60,6 +61,7 @@
 
   function handleFulfillmentMethodChange(method) {
     setStoreSelectorVisibility(method);
+    toggleBillingAddressFieldsVisibility(method);
 
     // Clear any WDC notices immediately when switching methods,
     // then request a checkout refresh to re-render the updated state.
@@ -945,5 +947,50 @@
     notice.innerHTML = "<p>" + outOfZoneState.message + "</p>";
 
     noticesContainer.appendChild(notice);
+  }
+
+  /**
+   * Toggle visibility of address-only billing fields for pickup/delivery mode
+   *
+   * For pickup: smoothly hide country, address_1, address_2, city, state, postcode
+   * For delivery: smoothly show address fields
+   *
+   * @param {string} method - 'pickup' or 'delivery'
+   */
+  function toggleBillingAddressFieldsVisibility(method) {
+    var addressFields = [
+      "billing_country",
+      "billing_address_1",
+      "billing_address_2",
+      "billing_city",
+      "billing_state",
+      "billing_postcode",
+    ];
+
+    if (method === "pickup") {
+      debugLog("billing address fields: hiding for pickup mode");
+      addressFields.forEach(function (fieldId) {
+        var field = document.getElementById(fieldId);
+        if (field) {
+          var wrapper = field.closest(".form-group, .woocommerce-form-group, p");
+          if (wrapper) {
+            wrapper.classList.add("wdc-billing-field--hidden");
+            debugLog("address field wrapper hidden", { fieldId: fieldId });
+          }
+        }
+      });
+    } else {
+      debugLog("billing address fields: showing for delivery mode");
+      addressFields.forEach(function (fieldId) {
+        var field = document.getElementById(fieldId);
+        if (field) {
+          var wrapper = field.closest(".form-group, .woocommerce-form-group, p");
+          if (wrapper) {
+            wrapper.classList.remove("wdc-billing-field--hidden");
+            debugLog("address field wrapper shown", { fieldId: fieldId });
+          }
+        }
+      });
+    }
   }
 })();

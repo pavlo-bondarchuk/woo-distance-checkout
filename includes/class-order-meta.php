@@ -154,9 +154,11 @@ class WDC_Order_Meta
         $order->update_meta_data('_wdc_tax_fallback_mode', $tax_fallback_mode);
         $order->update_meta_data('_wdc_tax_fallback_reason', $tax_fallback_reason);
 
-        // Ensure delivery orders have shipping address data in the order object
+        // Ensure shipping address data in the order object
         if ('delivery' === $fulfillment_method) {
             $this->ensure_delivery_shipping_address($order, $customer_address);
+        } elseif ('pickup' === $fulfillment_method) {
+            $this->set_pickup_shipping_address($order, $store_address);
         }
 
         $order->save();
@@ -214,6 +216,50 @@ class WDC_Order_Meta
 
         $order->save();
         $this->logger->info('WDC assigned shipping address for delivery order ' . $order->get_id());
+    }
+
+    /**
+     * Set store address as shipping address for pickup orders.
+     *
+     * Parses the store address string and sets WC shipping fields so the order
+     * clearly shows pickup location in admin.
+     *
+     * @param WC_Order $order        The order object.
+     * @param string   $store_address The store address string (e.g. "123 Main St, Sacramento, CA 95814").
+     */
+    private function set_pickup_shipping_address(WC_Order $order, $store_address)
+    {
+        if (empty($store_address)) {
+            return;
+        }
+
+        $parts = array_map('trim', explode(',', $store_address));
+
+        $street  = isset($parts[0]) ? $parts[0] : '';
+        $city    = isset($parts[1]) ? $parts[1] : '';
+        $state   = '';
+        $zip     = '';
+        $country = 'US';
+
+        if (isset($parts[2])) {
+            if (preg_match('/^([A-Za-z]{2})\s+(\d{5}(?:-\d{4})?)$/', trim($parts[2]), $m)) {
+                $state = strtoupper($m[1]);
+                $zip   = $m[2];
+            } else {
+                $state = trim($parts[2]);
+            }
+        }
+
+        $order->set_shipping_first_name($order->get_billing_first_name());
+        $order->set_shipping_last_name($order->get_billing_last_name());
+        $order->set_shipping_address_1(sanitize_text_field($street));
+        $order->set_shipping_city(sanitize_text_field($city));
+        $order->set_shipping_state(sanitize_text_field($state));
+        $order->set_shipping_postcode(sanitize_text_field($zip));
+        $order->set_shipping_country(sanitize_text_field($country));
+
+        $order->save();
+        $this->logger->info('WDC assigned store address as shipping address for pickup order ' . $order->get_id());
     }
 
     public function save_sales_tax_rate($order_id, $rate)

@@ -88,6 +88,7 @@ class WDC_Plugin
             $this->loader->add_action('woocommerce_checkout_billing', $checkout_controller, 'render_delivery_method', 5);
             $this->loader->add_action('woocommerce_checkout_billing', $checkout_controller, 'render_store_selector');
             $this->loader->add_action('woocommerce_checkout_billing', $checkout_controller, 'render_notices', 6);
+            $this->loader->add_filter('woocommerce_update_order_review_fragments', $checkout_controller, 'add_notices_fragment');
             $this->loader->add_action('woocommerce_checkout_process', $checkout_controller, 'enforce_delivery_order_validity');
             $this->loader->add_action('woocommerce_checkout_process', $checkout_controller, 'enforce_tax_failure_handling');
             $this->loader->add_action('woocommerce_after_checkout_validation', $checkout_controller, 'suppress_billing_validation_for_pickup', 10, 2);

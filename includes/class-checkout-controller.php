@@ -319,6 +319,32 @@ class WDC_Checkout_Controller
     }
 
     /**
+     * Add the WDC notices container to the AJAX-updated checkout fragments.
+     *
+     * WC re-renders order review fragments on every update_checkout call.
+     * Since #wdc-notices lives outside that fragment (in the billing section),
+     * we add it manually so it gets refreshed after address changes.
+     *
+     * Hook: woocommerce_update_order_review_fragments
+     *
+     * @param array $fragments Existing checkout fragments.
+     * @return array Updated fragments with #wdc-notices.
+     */
+    public function add_notices_fragment($fragments)
+    {
+        $notice = $this->get_checkout_notice();
+
+        ob_start();
+        $template_file = WDC_PLUGIN_DIR . 'templates/checkout-notices.php';
+        if (file_exists($template_file)) {
+            include $template_file;
+        }
+        $fragments['#wdc-notices'] = ob_get_clean();
+
+        return $fragments;
+    }
+
+    /**
      * Build a notice array for the current calculation state, or null if nothing to show.
      *
      * @return array|null Array with 'type' and 'message', or null.

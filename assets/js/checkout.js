@@ -95,13 +95,6 @@
               wdcCheckout.pickupStoreAddress = response.data.pickupStoreAddress;
             }
 
-            if (method === "pickup") {
-              applyPickupStoreAddressToBilling();
-              debugLog("checkout refresh triggered after pickup autofill");
-              triggerCheckoutRefresh();
-              return;
-            }
-
             triggerCheckoutRefresh();
           } else {
             console.error(
@@ -705,8 +698,6 @@
               wdcCheckout.pickupStoreAddress = response.data.pickupStoreAddress;
             }
 
-            applyPickupStoreAddressToBilling();
-            debugLog("checkout refresh triggered after pickup autofill");
             triggerCheckoutRefresh();
           } else {
             console.error(
@@ -900,53 +891,36 @@
   /**
    * Update out-of-zone notice based on current state
    *
-   * Shows/hides notice when address is outside delivery zone (delivery mode only).
+   * After each checkout update, the server re-renders #wdc-notices with the correct
+   * notice (or empty). Sync the JS outOfZoneState from the server-rendered HTML
+   * so that the JS variable stays current without needing a separate AJAX round-trip.
    * Does not show if checkout is blocked (blocked takes precedence).
    * Called on page load and after each checkout update.
    */
   function updateOutOfZoneNotice() {
-    var outOfZoneState = wdcCheckout && wdcCheckout.outOfZoneState;
     var isBlocked = wdcCheckout && wdcCheckout.isCheckoutBlockedForTax;
 
     if (isBlocked) {
       return;
     }
 
-    var existingNotice = document.getElementById("wdc-out-of-zone-notice");
-
-    if (!outOfZoneState || !outOfZoneState.is_out_of_zone) {
-      if (existingNotice) {
-        existingNotice.remove();
-      }
-      return;
-    }
-
-    if (existingNotice) {
-      return;
-    }
-
+    // After updated_checkout, WC has re-rendered the order review fragment including
+    // the #wdc-notices container. The server-side render_notices() already placed
+    // the correct notice (or empty) inside it. Sync the JS state from the DOM.
     var noticesContainer = document.getElementById("wdc-notices");
-    if (!noticesContainer) {
-      return;
+    if (noticesContainer) {
+      var serverNotice = noticesContainer.querySelector(".wdc-notice");
+      if (serverNotice) {
+        // Server rendered a notice — update JS state to match
+        wdcCheckout.outOfZoneState = {
+          is_out_of_zone: true,
+          message: serverNotice.textContent.trim(),
+        };
+      } else {
+        // Server rendered no notice — address is within zone or incomplete
+        wdcCheckout.outOfZoneState = null;
+      }
     }
-
-    var matchingNotice = Array.prototype.some.call(
-      noticesContainer.querySelectorAll(".wdc-notice"),
-      function (noticeItem) {
-        return noticeItem.textContent.trim() === outOfZoneState.message;
-      },
-    );
-
-    if (matchingNotice) {
-      return;
-    }
-
-    var notice = document.createElement("div");
-    notice.id = "wdc-out-of-zone-notice";
-    notice.className = "wdc-notice wdc-notice-error";
-    notice.innerHTML = "<p>" + outOfZoneState.message + "</p>";
-
-    noticesContainer.appendChild(notice);
   }
 
   /**
@@ -970,29 +944,35 @@
     if (method === "pickup") {
       debugLog("billing address fields: hiding for pickup mode");
       addressFields.forEach(function (fieldId) {
-        var field = document.getElementById(fieldId);
-        if (field) {
-          var wrapper = field.closest(
-            ".form-group, .woocommerce-form-group, p",
-          );
-          if (wrapper) {
-            wrapper.classList.add("wdc-billing-field--hidden");
-            debugLog("address field wrapper hidden", { fieldId: fieldId });
+        var wrapper = document.getElementById(fieldId + "_field");
+        if (!wrapper) {
+          var field = document.getElementById(fieldId);
+          if (field) {
+            wrapper = field.closest(
+              ".form-row, .form-group, .woocommerce-form-group, p",
+            );
           }
+        }
+        if (wrapper) {
+          wrapper.classList.add("wdc-billing-field--hidden");
+          debugLog("address field wrapper hidden", { fieldId: fieldId });
         }
       });
     } else {
       debugLog("billing address fields: showing for delivery mode");
       addressFields.forEach(function (fieldId) {
-        var field = document.getElementById(fieldId);
-        if (field) {
-          var wrapper = field.closest(
-            ".form-group, .woocommerce-form-group, p",
-          );
-          if (wrapper) {
-            wrapper.classList.remove("wdc-billing-field--hidden");
-            debugLog("address field wrapper shown", { fieldId: fieldId });
+        var wrapper = document.getElementById(fieldId + "_field");
+        if (!wrapper) {
+          var field = document.getElementById(fieldId);
+          if (field) {
+            wrapper = field.closest(
+              ".form-row, .form-group, .woocommerce-form-group, p",
+            );
           }
+        }
+        if (wrapper) {
+          wrapper.classList.remove("wdc-billing-field--hidden");
+          debugLog("address field wrapper shown", { fieldId: fieldId });
         }
       });
     }

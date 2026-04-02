@@ -180,6 +180,24 @@ button.wdc-blocked:focus {
     margin: 0;
 }
 
+/* Out-of-zone helper text below Place Order button */
+.wdc-out-of-zone-helper {
+    display: none;
+    color: #c00;
+    font-size: 0.9em;
+    margin-top: 0.75em;
+    padding: 0.75em 1em;
+    background-color: #fde7e7;
+    border-left: 4px solid #c00;
+    border-radius: 3px;
+}
+
+.wdc-out-of-zone-helper p {
+    margin: 0;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
 /* Hide elements */
 .wdc-hidden {
     display: none !important;

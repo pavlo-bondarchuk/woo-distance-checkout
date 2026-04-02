@@ -749,7 +749,14 @@
     var placeOrderBtn = document.querySelector(
       'button[name="woocommerce_checkout_place_order"]',
     );
-    if (placeOrderBtn) {
+
+    // Only re-enable button if not also blocked by out-of-zone
+    var isOutOfZone =
+      wdcCheckout &&
+      wdcCheckout.outOfZoneState &&
+      wdcCheckout.outOfZoneState.is_out_of_zone;
+
+    if (placeOrderBtn && !isOutOfZone) {
       placeOrderBtn.disabled = false;
       placeOrderBtn.classList.remove("wdc-blocked");
     }
@@ -920,6 +927,71 @@
         // Server rendered no notice — address is within zone or incomplete
         wdcCheckout.outOfZoneState = null;
       }
+    }
+
+    // Block or unblock Place Order button based on out-of-zone state
+    if (
+      wdcCheckout.outOfZoneState &&
+      wdcCheckout.outOfZoneState.is_out_of_zone
+    ) {
+      applyOutOfZoneBlock(wdcCheckout.outOfZoneState.message);
+    } else {
+      clearOutOfZoneBlock();
+    }
+  }
+
+  /**
+   * Block Place Order when address is outside delivery zone.
+   * Disables the button and shows the out-of-zone message directly below it
+   * so it is visible on mobile without scrolling up.
+   *
+   * @param {string} message The out-of-zone message to display.
+   */
+  function applyOutOfZoneBlock(message) {
+    var placeOrderBtn = document.querySelector(
+      'button[name="woocommerce_checkout_place_order"]',
+    );
+    if (!placeOrderBtn) {
+      return;
+    }
+
+    placeOrderBtn.disabled = true;
+    placeOrderBtn.classList.add("wdc-blocked");
+
+    var helperText = document.getElementById("wdc-out-of-zone-helper");
+    if (!helperText) {
+      helperText = document.createElement("div");
+      helperText.id = "wdc-out-of-zone-helper";
+      helperText.className = "wdc-out-of-zone-helper";
+      placeOrderBtn.parentNode.insertBefore(
+        helperText,
+        placeOrderBtn.nextSibling,
+      );
+    }
+    helperText.innerHTML = "<p>" + message + "</p>";
+    helperText.style.display = "block";
+
+    debugLog("Place Order blocked: out of delivery zone");
+  }
+
+  /**
+   * Remove out-of-zone block from Place Order button.
+   */
+  function clearOutOfZoneBlock() {
+    var placeOrderBtn = document.querySelector(
+      'button[name="woocommerce_checkout_place_order"]',
+    );
+
+    // Only unblock if not blocked for another reason (tax failure)
+    var isTaxBlocked = wdcCheckout && wdcCheckout.isCheckoutBlockedForTax;
+    if (placeOrderBtn && !isTaxBlocked) {
+      placeOrderBtn.disabled = false;
+      placeOrderBtn.classList.remove("wdc-blocked");
+    }
+
+    var helperText = document.getElementById("wdc-out-of-zone-helper");
+    if (helperText) {
+      helperText.style.display = "none";
     }
   }
 

@@ -32,7 +32,7 @@ if (! isset($current_method)) {
                 data-method="pickup" />
             <span class="wdc-fulfillment-method-option-content">
                 <span class="wdc-fulfillment-method-option-title"><?php echo esc_html__('Pickup', 'woo-distance-checkout'); ?></span>
-                <span class="wdc-fulfillment-method-option-description"><?php echo esc_html__('Shipping is free, tax uses store address', 'woo-distance-checkout'); ?></span>
+                <span class="wdc-fulfillment-method-option-description"><?php echo esc_html__('No Shipping Fee', 'woo-distance-checkout'); ?></span>
             </span>
         </label>
     </fieldset>

@@ -67,18 +67,18 @@ class WDC_Cart_Totals
                 $shipping_tax_amount = round($shipping_amount * ($tax_rate / 100), wc_get_price_decimals());
             }
 
-            if ($sales_tax_amount > 0) {
-                $cart->add_fee(__('Sales Tax', 'woo-distance-checkout'), $sales_tax_amount, false, '');
-                $this->logger->debug('✓ Sales Tax fee added: ' . $sales_tax_amount . ' @ ' . $tax_rate . '%');
-            } else {
-                $this->logger->debug('Sales Tax amount is zero, no fee added');
-            }
+            $combined_tax = $sales_tax_amount + $shipping_tax_amount;
 
-            if ($shipping_tax_amount > 0) {
-                $cart->add_fee(__('Shipping Tax', 'woo-distance-checkout'), $shipping_tax_amount, false, '');
-                $this->logger->debug('✓ Shipping Tax fee added: ' . $shipping_tax_amount . ' @ ' . $tax_rate . '%');
+            if ($combined_tax > 0) {
+                $tax_label = sprintf(
+                    /* translators: %s: tax rate percentage, e.g. 7.75% */
+                    __('Sales Tax (%s%%)', 'woo-distance-checkout'),
+                    number_format($tax_rate, 2)
+                );
+                $cart->add_fee($tax_label, $combined_tax, false, '');
+                $this->logger->debug('✓ Combined tax fee added: ' . $combined_tax . ' (product: ' . $sales_tax_amount . ' + shipping: ' . $shipping_tax_amount . ') @ ' . $tax_rate . '%');
             } else {
-                $this->logger->debug('Shipping Tax amount is zero, no fee added');
+                $this->logger->debug('Combined tax amount is zero, no fee added');
             }
         } else {
             $this->logger->debug('Tax calculation failed or no tax rate available');

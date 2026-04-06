@@ -859,9 +859,7 @@
     });
 
     // Also hide WDC tax rows if they exist by different selectors
-    var wdcTaxRows = document.querySelectorAll(
-      '[data-title="Sales Tax"], [data-title="Shipping Tax"]',
-    );
+    var wdcTaxRows = document.querySelectorAll('[data-title^="Sales Tax"]');
     wdcTaxRows.forEach(function (row) {
       row.style.display = "none";
       row.classList.add("wdc-hidden");

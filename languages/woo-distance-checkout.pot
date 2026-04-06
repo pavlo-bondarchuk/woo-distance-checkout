@@ -344,12 +344,14 @@ msgstr ""
 msgid "Shipping"
 msgstr ""
 
-#: includes/class-cart-totals.php:65
+#: includes/class-cart-totals.php:75
+msgid "Sales Tax (%s%%)"
+msgstr ""
+
 #: includes/class-order-meta.php:102
 msgid "Sales Tax"
 msgstr ""
 
-#: includes/class-cart-totals.php:72
 #: includes/class-order-meta.php:105
 msgid "Shipping Tax"
 msgstr ""
@@ -423,7 +425,7 @@ msgid "Pickup"
 msgstr ""
 
 #: templates/checkout-delivery-method.php:32
-msgid "Shipping is free, tax uses store address"
+msgid "No Shipping Fee"
 msgstr ""
 
 #: templates/checkout-store-selector.php:18

@@ -1,0 +1,118 @@
+name: Create Stabilization Issues
+
+on:
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  create-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Issue 1 - Final regression pass
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body1 = [
+              '## Overview',
+              '',
+              'This is a final regression QA pass before stable client/demo usage. The goal is to verify all checkout states, fulfillment flows, and order persistence work correctly end-to-end with no regressions.',
+              '',
+              '## QA Checklist',
+              '',
+              '- [ ] Delivery with a valid in-zone address — checkout proceeds normally, totals render correctly',
+              '- [ ] Delivery with an out-of-zone address — out-of-zone notice appears, checkout is appropriately blocked or flagged',
+              '- [ ] Pickup with valid billing data — checkout proceeds without delivery-related restrictions',
+              '- [ ] Tax API success path — tax is calculated and applied, totals update correctly',
+              '- [ ] Tax API failure with `block_checkout` mode — Place Order button is disabled, blocked notice is shown',
+              '- [ ] Tax API failure with `manual_review` mode — checkout is allowed, thank-you page notice is shown',
+              '- [ ] Switching delivery → pickup → delivery — all notices, totals, and states update correctly with no stale data',
+              '- [ ] Checkout totals rendering — no stale or placeholder totals remain after fulfillment switch',
+              '- [ ] Order meta persistence — delivery distance, fulfillment mode, and tax data are correctly saved to order meta',
+              '- [ ] Thank-you page notices — correct notice displayed based on fulfillment mode and fallback state',
+              '- [ ] Admin order panel details — distance, mode, and fallback reason are visible in the order admin panel',
+              '',
+              '## Expected Results',
+              '',
+              '- No duplicate notices appear during any checkout state',
+              '- No stale totals remain after fulfillment type switching',
+              '- No stale blocked state persists after switching to pickup',
+              '- Correct meta persistence after switching between fulfillment modes',
+              '- Thank-you page and admin panel reflect the actual order fulfillment outcome',
+            ].join('\n');
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Final regression pass for checkout states and order persistence',
+              body: body1,
+            });
+
+      - name: Create Issue 2 - i18n review
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body2 = [
+              '## Overview',
+              '',
+              "All user-facing strings must remain translation-ready. This task covers a full i18n audit of the plugin to ensure no hardcoded strings remain and the POT file is fully in sync with the current codebase.",
+              '',
+              '## QA Checklist',
+              '',
+              "- [ ] Audit all PHP strings for correct `__( ... , 'woo-distance-checkout' )` / `esc_html__()` usage",
+              '- [ ] Audit all JS notice strings for `wp.i18n` or equivalent translation calls',
+              '- [ ] Review checkout helper texts for correct translation wrapping',
+              '- [ ] Review admin labels and descriptions for translation readiness',
+              '- [ ] Review thank-you page warning texts for translation readiness',
+              '- [ ] Verify consistent text domain usage (`woo-distance-checkout`) across all files',
+              '- [ ] Regenerate `languages/woo-distance-checkout.pot` using WP-CLI or equivalent',
+              '- [ ] Verify all new strings are included in the regenerated POT file',
+              '- [ ] Verify no hardcoded frontend notice strings remain outside translation functions',
+              '',
+              '## Expected Results',
+              '',
+              '- All visible strings are translatable',
+              '- No untranslated dynamic notices remain in PHP or JS',
+              '- POT file is fully in sync with the current codebase',
+            ].join('\n');
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Complete i18n review for PHP, JS notices, and generated POT file',
+              body: body2,
+            });
+
+      - name: Create Issue 3 - UX polish
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body3 = [
+              '## Overview',
+              '',
+              'This issue covers polish for checkout clarity and user-facing UX consistency. No business-logic changes are in scope — the focus is on notice placement, wording clarity, and visual state management during fulfillment switching.',
+              '',
+              '## QA Checklist',
+              '',
+              '- [ ] Verify blocked checkout notice placement is consistent and visible',
+              '- [ ] Verify out-of-zone notice placement does not conflict with other notices',
+              '- [ ] Review helper text under the disabled Place Order button for clarity',
+              '- [ ] Verify total placeholder visibility when totals are blocked or loading',
+              '- [ ] Define and verify notice priority when multiple checkout states are active simultaneously',
+              '- [ ] Verify notices and state are cleaned up correctly after switching between delivery and pickup',
+              '- [ ] Review wording clarity for blocked delivery vs. blocked pickup scenarios',
+              '- [ ] Review wording clarity for the maximum delivery distance message',
+              '',
+              '## Expected Results',
+              '',
+              '- No conflicting notices appear at the same time',
+              '- No duplicate notices appear during any checkout state',
+              '- No misleading text remains after switching fulfillment type',
+              '- The totals area remains understandable when blocked or recalculating',
+              '- Checkout state is visually clear to the user without requiring a page reload',
+            ].join('\n');
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'UX polish for checkout notices, blocked totals, and fulfillment switching',
+              body: body3,
+            });
